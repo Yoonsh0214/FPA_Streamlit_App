@@ -1,0 +1,19 @@
+# Project: FPA Local to Web Converter
+
+## 1. Overview
+The primary goal of this project is to convert an existing local Python application (FPA) into a simple, web-based application. This will allow users to perform data analysis without needing to install any dependencies on their local machine. The web application should be minimal, focusing only on the core functionality of uploading a data file, processing it, and downloading the results.
+
+## 2. Core Functionality
+- **File Upload:** The user must be able to upload an Excel file (`.xlsx`) through a web interface. The Excel file is expected to have a sheet named 'Data' which contains the raw data for analysis.
+- **Data Processing:** Upon file upload, the web server will use the existing `analysis.py` Python script to perform all the necessary data processing and statistical calculations.
+- **Result Download:** After processing is complete, the application will generate a new Excel file containing the analysis results (including multiple sheets like 'Data', 'Tableau_Pass', 'Final_Stats', etc.). This resulting file should be automatically downloaded by the user's browser.
+
+## 3. Technical Stack
+- **Backend:** A minimal Flask server will be used. It will consist of a single Python file (`app.py`) responsible for serving the web page and handling the file analysis logic.
+- **Frontend:** A single, simple HTML file (`index.html`) with inline CSS and JavaScript. No complex frontend frameworks are needed.
+- **Core Logic:** The existing `analysis.py` script will be reused without modification.
+
+## 4. Implementation Details
+- The application will not have a database or user authentication. It is a stateless tool.
+- The user interface will be as simple as possible: a title, a file input field, and a submit button.
+- All processing will be done synchronously. The user uploads a file and waits for the download to begin.
