@@ -26,20 +26,6 @@ ACTION_CODES = { 'ddd': 'Goal', 'dd': 'Shot On Target', 'd': 'Shot', 'db': 'Bloc
 TAG_CODES = { 'k': 'Key', 'a': 'Assist', 'h': 'Header', 'r': 'Aerial', 'w': 'Suffered', 'n': 'In-box', 'u': 'Out-box', 'p': 'Progressive', 'c': 'Counter Attack', 'sw': 'Switch', 'wf': 'Weak Foot', 'ft': 'First Time' }
 TWO_DOT_ACTION_CODES = {'s', 'c', 'r', 'e'}
 
-def generate_field_drawing():
-    # 필드 라인을 그리기 위한 JSON 데이터 생성
-    return {
-        "version": "4.4.0",
-        "objects": [
-            {"type": "rect", "left": 0, "top": 0, "width": CANVAS_WIDTH, "height": CANVAS_HEIGHT, "fill": "transparent", "stroke": "white", "strokeWidth": 2},
-            {"type": "line", "x1": CANVAS_WIDTH / 2, "y1": 0, "x2": CANVAS_WIDTH / 2, "y2": CANVAS_HEIGHT, "stroke": "white", "strokeWidth": 2},
-            {"type": "circle", "left": CANVAS_WIDTH / 2 - 87, "top": CANVAS_HEIGHT / 2 - 87, "radius": 87, "fill": "transparent", "stroke": "white", "strokeWidth": 2},
-            {"type": "rect", "left": 0, "top": 142.5, "width": 157, "height": 415, "fill": "transparent", "stroke": "white", "strokeWidth": 2},
-            {"type": "rect", "left": CANVAS_WIDTH - 157, "top": 142.5, "width": 157, "height": 415, "fill": "transparent", "stroke": "white", "strokeWidth": 2},
-            {"type": "rect", "left": 0, "top": 256, "width": 52, "height": 188, "fill": "transparent", "stroke": "white", "strokeWidth": 2},
-            {"type": "rect", "left": CANVAS_WIDTH - 52, "top": 256, "width": 52, "height": 188, "fill": "transparent", "stroke": "white", "strokeWidth": 2},
-        ]
-    }
 
 def parse_logs_to_dataframe(logs, match_id, teamid_h, teamid_a):
     # (이전과 동일한 함수)
@@ -137,7 +123,7 @@ with tab1:
         st.header("축구장")
         canvas_result = st_canvas(
             fill_color="rgba(255, 165, 0, 0.3)", stroke_width=2, stroke_color="#FF7740", background_color="#06703B",
-            initial_drawing=generate_field_drawing(), update_streamlit=True, height=CANVAS_HEIGHT, width=CANVAS_WIDTH,
+            update_streamlit=True, height=CANVAS_HEIGHT, width=CANVAS_WIDTH,
             drawing_mode="point", key="canvas")
         if canvas_result.json_data is not None and canvas_result.json_data["objects"]:
             new_dot = canvas_result.json_data["objects"][-1]
