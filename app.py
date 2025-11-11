@@ -5,6 +5,7 @@ import io
 import re
 from PIL import Image
 from streamlit_drawable_canvas import st_canvas
+import numpy as np
 
 # --- 초기 설정 ---
 st.set_page_config(page_title="FPA Live Analyzer", layout="wide")
@@ -209,15 +210,18 @@ with tab1:
     with col2:
         st.header("축구장")
         try:
-            bg_image = Image.open("static/assets/football_field.png")
+            # 이미지를 열고 안정적인 RGBA 포맷의 Numpy 배열로 변환
+            pil_image = Image.open("static/assets/football_field.png").convert("RGBA")
+            bg_image = np.array(pil_image)
+
             canvas_result = st_canvas(
                 fill_color="rgba(255, 165, 0, 0.3)",
                 stroke_width=2,
                 stroke_color="#FF7740",
                 background_image=bg_image,
                 update_streamlit=True,
-                height=450,
-                width=700,
+                height=700,
+                width=1000,
                 drawing_mode="point",
                 key="canvas",
             )
@@ -227,8 +231,8 @@ with tab1:
                 
                 # Prevent duplicate coordinates
                 if (x, y) not in [(d['x'], d['y']) for d in st.session_state.dots]:
-                    meter_x = round(x * FIELD_WIDTH / 700, 2)
-                    meter_y = round((450 - y) * FIELD_HEIGHT / 450, 2)
+                    meter_x = round(x * FIELD_WIDTH / 1000, 2)
+                    meter_y = round((700 - y) * FIELD_HEIGHT / 700, 2)
                     st.session_state.dots.append({'x': x, 'y': y, 'meter_x': meter_x, 'meter_y': meter_y})
                     st.rerun()
 
