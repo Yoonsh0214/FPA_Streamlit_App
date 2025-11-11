@@ -14,6 +14,8 @@ if 'logs' not in st.session_state:
     st.session_state.logs = []
 if 'dots' not in st.session_state:
     st.session_state.dots = []
+if 'minute_counter' not in st.session_state:
+    st.session_state.minute_counter = 0
 
 # --- 상수 및 헬퍼 함수 (기존 ui.py에서 가져옴) ---
 FIELD_WIDTH = 105
@@ -80,6 +82,12 @@ with tab1:
     col1, col2 = st.columns([0.4, 0.6])
 
     with col1:
+        try:
+            logo_image = Image.open("static/assets/logo.png")
+            st.image(logo_image, width=250)
+        except FileNotFoundError:
+            st.error("로고 이미지를 찾을 수 없습니다.")
+
         st.header("입력 컨트롤")
         
         # 경기 정보
@@ -92,7 +100,24 @@ with tab1:
             direction = st.radio("Direction", ["right", "left"], horizontal=True)
 
         # 시간 및 스탯 입력
-        timeline = st.text_input("Timeline (MM:SS)", "00:00")
+        st.markdown("---")
+        
+        time_col1, time_col2, time_col3 = st.columns([1, 2, 1])
+        
+        with time_col1:
+            if st.button("➖ 1분"):
+                if st.session_state.minute_counter > 0:
+                    st.session_state.minute_counter -= 1
+        
+        with time_col2:
+            timeline_display = f"{str(st.session_state.minute_counter).zfill(2)}:00"
+            st.text_input("Timeline", value=timeline_display, disabled=True, label_visibility="collapsed")
+
+        with time_col3:
+            if st.button("➕ 1분"):
+                st.session_state.minute_counter += 1
+        
+        timeline = f"{str(st.session_state.minute_counter).zfill(2)}:00" # 로그 생성에 사용될 시간
         stat_input = st.text_input("스탯 코드 입력 (예: 10ss8.k)")
         
         submit_button = st.button("스탯 기록")
