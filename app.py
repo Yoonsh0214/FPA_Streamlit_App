@@ -1,41 +1,31 @@
-import os
-import io
-from flask import Flask, request, send_file, render_template, jsonify
+import streamlit as st
 import pandas as pd
 import analysis
+import io
 
-app = Flask(__name__)
+st.set_page_config(page_title="FPA Data Analyzer", layout="centered")
 
-@app.route('/')
-def index():
-    """
-    메인 페이지를 렌더링합니다.
-    """
-    return render_template('index.html')
+st.title("📊 FPA 데이터 분석 웹 애플리케이션")
 
-@app.route('/process', methods=['POST'])
-def process_file():
-    """
-    업로드된 엑셀 파일을 받아 분석하고, 결과 엑셀 파일을 반환합니다.
-    """
-    if 'file' not in request.files:
-        return "No file part", 400
-    
-    file = request.files['file']
-    
-    if file.filename == '':
-        return "No selected file", 400
+st.write("""
+이 앱은 FPA 데이터가 포함된 Excel 파일을 분석합니다.
+'Data' 시트가 포함된 `.xlsx` 파일을 업로드하면, 분석된 통계가 포함된 새로운 Excel 파일을 다운로드할 수 있습니다.
+""")
 
-    if file and file.filename.endswith('.xlsx'):
-        try:
-            df = pd.read_excel(file, sheet_name='Data')
+uploaded_file = st.file_uploader("여기에 Excel 파일(.xlsx)을 업로드하세요", type=['xlsx'])
 
-            # --- 기존 analysis.py의 분석 파이프라인 실행 ---
+if uploaded_file is not None:
+    try:
+        with st.spinner('데이터를 분석하는 중입니다... 잠시만 기다려주세요.'):
+            df = pd.read_excel(uploaded_file, sheet_name='Data')
+
+            # --- analysis.py의 전체 분석 파이프라인 실행 ---
             df_with_seconds = analysis.convert_time_to_seconds(df.copy())
             df_tagged = analysis.auto_tag_key_pass_and_assist(df_with_seconds)
             df_analyzed = analysis.analyze_pass_data(df_tagged)
             df_analyzed_with_xg = analysis.add_xg_to_data(df_analyzed)
 
+            # 메모리 내에서 엑셀 파일 생성
             output = io.BytesIO()
             with pd.ExcelWriter(output, engine='openpyxl') as writer:
                 df_analyzed_with_xg.to_excel(writer, sheet_name='Data', index=False)
@@ -74,20 +64,18 @@ def process_file():
                     final_stats_df = final_stats_df.fillna(0).astype(int)
                     final_stats_df.index.name = 'Player'
                     final_stats_df.to_excel(writer, sheet_name='Final_Stats')
-
-            output.seek(0)
             
-            return send_file(
-                output,
-                as_attachment=True,
-                download_name='analyzed_data.xlsx',
-                mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-            )
+            output.seek(0)
+        
+        st.success('✅ 분석이 완료되었습니다! 아래 버튼을 눌러 결과를 다운로드하세요.')
+        
+        st.download_button(
+            label="📥 분석 결과 다운로드 (.xlsx)",
+            data=output,
+            file_name="analyzed_data.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
 
-        except Exception as e:
-            return f"An error occurred: {str(e)}", 500
-    
-    return "Invalid file type", 400
-
-if __name__ == '__main__':
-    app.run(debug=True)
+    except Exception as e:
+        st.error(f"오류가 발생했습니다: {e}")
+        st.warning("Excel 파일에 'Data'라는 이름의 시트가 포함되어 있는지 확인해주세요.")
