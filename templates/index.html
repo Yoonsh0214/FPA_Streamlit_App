@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>FPA Live Analyzer</title>
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --primary-hover: #0056b3;
+            --bg-color: #f0f2f5;
+            --card-bg: #ffffff;
+            --text-color: #333;
+            --border-color: #dee2e6;
+            --shadow: 0 2px 4px rgba(0,0,0,0.08);
+        }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color); 
+            margin: 0; 
+            padding: 15px; 
+            color: var(--text-color);
+            font-size: 14px;
+        }
+        .card { 
+            background: var(--card-bg); 
+            border-radius: 6px; 
+            padding: 15px; 
+            box-shadow: var(--shadow); 
+            border: 1px solid var(--border-color);
+        }
+        .main-container { display: flex; width: 100%; max-width: 1600px; margin: auto; gap: 15px; align-items: stretch; }
+        .controls-container { width: 400px; flex-shrink: 0; }
+        .right-column { flex-grow: 1; display: flex; flex-direction: column; gap: 15px; }
+        .right-column .card { width: 100%; box-sizing: border-box; }
+        
+        h1 { font-size: 24px; }
+        h2 { font-size: 20px; color: var(--primary-color); }
+        h4 { font-size: 16px; color: var(--primary-color); margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-bottom: 15px; }
+
+        .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+            font-size: 14px;
+        }
+        input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        .radio-group { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+        
+        #field-wrapper { position: relative; }
+        #field-image { width: 100%; display: block; border-radius: 5px; }
+        .dot { position: absolute; width: 10px; height: 10px; background-color: #FF7740; border-radius: 50%; transform: translate(-50%, -50%); border: 1.5px solid white; }
+        
+        button { 
+            width: 100%; 
+            padding: 10px; 
+            border: none; 
+            border-radius: 4px; 
+            background-color: var(--primary-color); 
+            color: white; 
+            cursor: pointer; 
+            font-size: 14px;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        button:hover { background-color: var(--primary-hover); }
+        .button-group { display: flex; gap: 10px; }
+
+        #mode-selector button {
+            background-color: #e9ecef;
+            color: var(--text-color);
+            flex: 1;
+        }
+        #mode-selector button.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        @media (max-width: 1200px) {
+            .main-container { flex-direction: column; }
+            .controls-container { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div style="width: 100%; max-width: 1000px; margin: auto;">
+        <div class="card" style="margin-bottom: 20px;">
+            <h1>FPA Live Analyzer</h1>
+            <div id="mode-selector" style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <button id="btn-live-mode">⚽ 실시간 입력</button>
+                <button id="btn-upload-mode">📄 파일 업로드</button>
+            </div>
+        </div>
+
+        <!-- 실시간 입력 모드 -->
+        <div id="live-mode-container" class="main-container">
+            <!-- 왼쪽 컨트롤 패널 -->
+            <div class="controls-container card">
+                <img id="logo" src="/static/assets/logo.png" alt="logo" style="width: 200px; margin-bottom: 20px;">
+                <h2>입력 컨트롤</h2>
+                <div class="card">
+                    <h4>경기 정보</h4>
+                    <div class="input-grid">
+                        <input type="text" id="match_id" placeholder="Match ID">
+                        <input type="text" id="teamid_h" placeholder="Home Team ID">
+                        <input type="text" id="teamid_a" placeholder="Away Team ID">
+                    </div>
+                    <div class="radio-group">
+                        <p>Half:</p> <input type="radio" id="half_1st" name="half" value="1st" checked> <label for="half_1st">1st</label>
+                        <input type="radio" id="half_2nd" name="half" value="2nd"> <label for="half_2nd">2nd</label>
+                    </div>
+                    <div class="radio-group">
+                        <p>Team:</p> <input type="radio" id="team_home" name="team" value="home" checked> <label for="team_home">Home</label>
+                        <input type="radio" id="team_away" name="team" value="away"> <label for="team_away">Away</label>
+                    </div>
+                    <div class="radio-group">
+                        <p>Direction:</p> <input type="radio" id="dir_right" name="direction" value="right" checked> <label for="dir_right">Right</label>
+                        <input type="radio" id="dir_left" name="direction" value="left"> <label for="dir_left">Left</label>
+                    </div>
+                </div>
+                <div class="card">
+                    <h4>시간 및 스탯</h4>
+                    <input type="text" id="timeline" value="00:00">
+                    <input type="text" id="stat_input" placeholder="스탯 코드 (예: 10ss8.k)">
+                    <button id="submit_stat">스탯 기록</button>
+                </div>
+            </div>
+            <!-- 오른쪽 컬럼 (축구장 + 로그) -->
+            <div class="right-column">
+                <div class="card">
+                    <h2>축구장</h2>
+                    <div id="field-wrapper">
+                        <img id="field-image" src="/static/assets/football_field.png" alt="Football Field">
+                    </div>
+                </div>
+            <div class="card">
+                <h4>기록된 로그</h4>
+                <textarea id="log_display" rows="12"></textarea>
+                    <div class="button-group">
+                        <button id="delete_last">마지막 로그 삭제</button>
+                        <button id="export_logs">현재 로그 분석 및 Excel로 내보내기</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <!-- 파일 업로드 모드 -->
+    <div id="upload-mode-container" class="card" style="display: none;">
+        <h2>파일 업로드하여 분석</h2>
+        <p>'Data' 시트가 포함된 .xlsx 파일을 업로드하세요.</p>
+        <form id="upload-form">
+            <input type="file" name="file" id="file-input" accept=".xlsx" required>
+            <button type="submit">파일 분석 및 다운로드</button>
+        </form>
+    </div>
+</div>
+
+    <script>
+        const FIELD_WIDTH_M = 105;
+        const FIELD_HEIGHT_M = 68;
+        let dots = [];
+        let logs = [];
+
+        const fieldWrapper = document.getElementById('field-wrapper');
+        const fieldImage = document.getElementById('field-image');
+        const logDisplay = document.getElementById('log_display');
+
+        // 모드 전환 로직
+        const liveModeContainer = document.getElementById('live-mode-container');
+        const uploadModeContainer = document.getElementById('upload-mode-container');
+        const btnLiveMode = document.getElementById('btn-live-mode');
+        const btnUploadMode = document.getElementById('btn-upload-mode');
+
+        function setMode(mode) {
+            if (mode === 'live') {
+                liveModeContainer.style.display = 'flex';
+                uploadModeContainer.style.display = 'none';
+                btnLiveMode.classList.add('active');
+                btnUploadMode.classList.remove('active');
+            } else {
+                liveModeContainer.style.display = 'none';
+                uploadModeContainer.style.display = 'block';
+                btnLiveMode.classList.remove('active');
+                btnUploadMode.classList.add('active');
+            }
+        }
+        
+        btnLiveMode.addEventListener('click', () => setMode('live'));
+        btnUploadMode.addEventListener('click', () => setMode('upload'));
+
+        // 초기 모드 설정
+        setMode('live');
+
+        // 실시간 입력 로직
+        fieldWrapper.addEventListener('click', (event) => {
+            const rect = fieldImage.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+
+            const meter_x = (x / rect.width * FIELD_WIDTH_M).toFixed(2);
+            const meter_y = ((rect.height - y) / rect.height * FIELD_HEIGHT_M).toFixed(2);
+            
+            dots.push({ x, y, meter_x, meter_y });
+            drawDot(x, y);
+        });
+
+        function drawDot(x, y) {
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.style.left = `${x}px`;
+            dot.style.top = `${y}px`;
+            fieldWrapper.appendChild(dot);
+        }
+
+        function clearDots() {
+            dots = [];
+            document.querySelectorAll('.dot').forEach(d => d.remove());
+        }
+
+        document.getElementById('submit_stat').addEventListener('click', async () => {
+            const statInput = document.getElementById('stat_input').value;
+            if (!statInput || dots.length === 0) {
+                alert('스탯 코드와 좌표를 모두 입력해주세요.');
+                return;
+            }
+
+            const payload = {
+                stat_input: statInput,
+                dots: dots,
+                half: document.querySelector('input[name="half"]:checked').value,
+                team: document.querySelector('input[name="team"]:checked').value,
+                direction: document.querySelector('input[name="direction"]:checked').value,
+                timeline: document.getElementById('timeline').value,
+            };
+
+            const response = await fetch('/generate_log', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                logs.push(data.log_text);
+                logDisplay.value = logs.join('\n');
+                clearDots();
+                document.getElementById('stat_input').value = '';
+            } else {
+                alert(`오류 발생: ${data.error}`);
+            }
+        });
+
+        document.getElementById('delete_last').addEventListener('click', () => {
+            if (logs.length > 0) {
+                logs.pop();
+                logDisplay.value = logs.join('\n');
+            }
+        });
+
+        document.getElementById('export_logs').addEventListener('click', async () => {
+            if (logs.length === 0) {
+                alert('분석할 로그가 없습니다.');
+                return;
+            }
+
+            const payload = {
+                logs: logs,
+                match_id: document.getElementById('match_id').value,
+                teamid_h: document.getElementById('teamid_h').value,
+                teamid_a: document.getElementById('teamid_a').value,
+            };
+
+            const response = await fetch('/export', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = 'live_analyzed_data.xlsx';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+            } else {
+                const error = await response.json();
+                alert(`오류 발생: ${error.error}`);
+            }
+        });
+
+        // 파일 업로드 로직
+        document.getElementById('upload-form').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const fileInput = document.getElementById('file-input');
+            if (fileInput.files.length === 0) {
+                alert('분석할 파일을 선택해주세요.');
+                return;
+            }
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            const response = await fetch('/upload_analyze', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = 'uploaded_analyzed_data.xlsx';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+            } else {
+                const error = await response.json();
+                alert(`오류 발생: ${error.error}`);
+            }
+        });
+    </script>
+</body>
+</html>
