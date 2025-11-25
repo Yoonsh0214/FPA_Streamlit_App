@@ -3,149 +3,63 @@
     "tasks": [
       {
         "id": 1,
-        "title": "Set up Flask project structure",
-        "description": "Create the basic Flask application structure with necessary files and directories",
-        "details": "1. Create a new directory for the project\n2. Set up a Python virtual environment\n3. Install Flask and other required dependencies\n4. Create the basic file structure:\n   - app.py (main Flask application)\n   - templates/ (directory for HTML templates)\n   - static/ (directory for static assets)\n   - requirements.txt (list of dependencies)\n\nCode for app.py (initial setup):\n```python\nfrom flask import Flask, render_template\n\napp = Flask(__name__)\n\n@app.route('/')\ndef index():\n    return render_template('index.html')\n\nif __name__ == '__main__':\n    app.run(debug=True)\n```\n\nrequirements.txt:\n```\nflask==2.0.1\npandas==1.3.3\nopenpyxl==3.0.9\nxlsxwriter==3.0.1\n```",
-        "testStrategy": "1. Verify that the Flask application runs without errors\n2. Confirm that the basic route returns the index.html page\n3. Check that all dependencies are correctly installed and accessible",
+        "title": "Setup Flask Backend Server",
+        "description": "Create the main Flask application file (`app.py`). This file will handle HTTP requests, serve the frontend, and manage the analysis workflow.",
+        "details": "- Initialize a Flask app.\n- Create a root route `/` to serve the `index.html` file.\n- Create a `/analyze` route (POST method) to handle file uploads.",
+        "status": "done",
         "priority": "high",
-        "dependencies": [],
-        "status": "pending",
-        "subtasks": []
+        "dependencies": []
       },
       {
         "id": 2,
-        "title": "Create basic HTML interface",
-        "description": "Develop a simple HTML interface with file upload functionality",
-        "details": "Create index.html in the templates directory with the following elements:\n1. A title for the application\n2. A file input field that accepts only .xlsx files\n3. A submit button to upload the file\n4. Basic inline CSS for styling\n\nHTML template:\n```html\n<!DOCTYPE html>\n<html>\n<head>\n    <title>FPA Local to Web Converter</title>\n    <style>\n        body {\n            font-family: Arial, sans-serif;\n            max-width: 800px;\n            margin: 0 auto;\n            padding: 20px;\n        }\n        h1 {\n            text-align: center;\n        }\n        .upload-form {\n            margin-top: 30px;\n            text-align: center;\n        }\n        .submit-btn {\n            margin-top: 15px;\n            padding: 10px 20px;\n            background-color: #4CAF50;\n            color: white;\n            border: none;\n            cursor: pointer;\n        }\n        .loading {\n            display: none;\n            text-align: center;\n            margin-top: 20px;\n        }\n    </style>\n</head>\n<body>\n    <h1>FPA Local to Web Converter</h1>\n    <div class=\"upload-form\">\n        <form id=\"upload-form\" action=\"/process\" method=\"post\" enctype=\"multipart/form-data\">\n            <input type=\"file\" name=\"file\" accept=\".xlsx\" required>\n            <br>\n            <button type=\"submit\" class=\"submit-btn\">Process File</button>\n        </form>\n        <div id=\"loading\" class=\"loading\">\n            Processing your file, please wait...\n        </div>\n    </div>\n    <script>\n        document.getElementById('upload-form').onsubmit = function() {\n            document.getElementById('loading').style.display = 'block';\n        };\n    </script>\n</body>\n</html>\n```",
-        "testStrategy": "1. Verify that the HTML renders correctly in different browsers\n2. Confirm that the file input only accepts .xlsx files\n3. Check that the form submits to the correct endpoint\n4. Verify that the loading message appears when the form is submitted",
+        "title": "Create Frontend User Interface",
+        "description": "Develop a simple user interface using a single HTML file (`index.html`). The interface will allow users to upload their Excel file.",
+        "details": "- Create a `templates` folder.\n- Inside, create an `index.html` file.\n- The HTML should include a file input element and a submit button.\n- Add basic JavaScript to send the uploaded file to the `/analyze` backend endpoint and handle the file download response.",
+        "status": "done",
         "priority": "high",
         "dependencies": [
           1
-        ],
-        "status": "pending",
-        "subtasks": []
+        ]
       },
       {
         "id": 3,
-        "title": "Integrate existing analysis.py script",
-        "description": "Import and prepare the existing analysis.py script for use in the web application",
-        "details": "1. Copy the existing analysis.py file into the project directory\n2. Modify the script if necessary to work as an importable module\n3. Create a wrapper function that can be called from the Flask application\n\nExample integration code:\n```python\n# In app.py\nimport analysis\n\ndef process_excel_file(input_file_path):\n    \"\"\"Wrapper function to call the analysis script\"\"\"\n    try:\n        # Assuming analysis.py has a main function that takes an input file path\n        # and returns an output file path or processes the file in place\n        output_file_path = analysis.process_data(input_file_path)\n        return output_file_path, None\n    except Exception as e:\n        return None, str(e)\n```\n\nIf the analysis.py script doesn't have a clean function to call, you may need to refactor it slightly to make it importable without running the entire script.",
-        "testStrategy": "1. Verify that the analysis.py script can be imported without errors\n2. Test the wrapper function with a sample Excel file\n3. Confirm that the script processes the data correctly when called from the wrapper function\n4. Check that error handling works properly",
+        "title": "Integrate Core Analysis Logic",
+        "description": "Copy the existing `analysis.py` script into the project and integrate its functions into the Flask backend.",
+        "details": "- Copy `analysis.py` from the original FPA project to the `FPA_WebApp` directory.\n- In `app.py`, import the `analysis` module.\n- In the `/analyze` route, after receiving a file, call the sequence of analysis functions from the module on the uploaded data.\n- Generate the final Excel file in memory using pandas and io.BytesIO.",
+        "status": "done",
         "priority": "high",
         "dependencies": [
           1
-        ],
-        "status": "pending",
-        "subtasks": []
+        ]
       },
       {
         "id": 4,
-        "title": "Implement file upload endpoint",
-        "description": "Create a Flask route to handle file uploads and save the uploaded file temporarily",
-        "details": "Add a new route to app.py that handles POST requests for file uploads:\n\n```python\nimport os\nfrom flask import request, flash, redirect, url_for\nimport uuid\n\n# Create a directory for temporary files\nUPLOAD_FOLDER = 'temp_uploads'\nos.makedirs(UPLOAD_FOLDER, exist_ok=True)\n\n@app.route('/process', methods=['POST'])\ndef process_file():\n    if 'file' not in request.files:\n        return redirect(url_for('index'))\n        \n    file = request.files['file']\n    \n    if file.filename == '':\n        return redirect(url_for('index'))\n        \n    if file and file.filename.endswith('.xlsx'):\n        # Generate a unique filename to avoid collisions\n        unique_filename = str(uuid.uuid4()) + '.xlsx'\n        file_path = os.path.join(UPLOAD_FOLDER, unique_filename)\n        file.save(file_path)\n        \n        # Process the file (will be implemented in the next task)\n        # ...\n        \n        return \"File uploaded successfully\"\n    \n    return redirect(url_for('index'))\n```\n\nAlso add a cleanup function to remove temporary files after processing.",
-        "testStrategy": "1. Test uploading valid Excel files\n2. Test uploading files with incorrect extensions\n3. Test uploading empty files\n4. Verify that uploaded files are saved correctly in the temporary directory\n5. Confirm that unique filenames are generated to prevent overwriting",
-        "priority": "high",
+        "title": "Finalize Dependencies and Documentation",
+        "description": "Create a `requirements.txt` file for easy setup and provide simple instructions on how to run the application.",
+        "details": "- Create a `requirements.txt` file listing all necessary Python libraries (e.g., Flask, pandas, openpyxl).\n- Create a simple `README.md` file with instructions to install dependencies (`pip install -r requirements.txt`) and run the server (`python app.py`).",
+        "status": "done",
+        "priority": "medium",
         "dependencies": [
           1,
-          2
-        ],
-        "status": "pending",
-        "subtasks": []
+          2,
+          3
+        ]
       },
       {
         "id": 5,
-        "title": "Implement file processing logic",
-        "description": "Connect the file upload endpoint with the analysis script to process the uploaded Excel file",
-        "details": "Extend the process_file route to call the analysis script after saving the uploaded file:\n\n```python\n@app.route('/process', methods=['POST'])\ndef process_file():\n    if 'file' not in request.files:\n        return redirect(url_for('index'))\n        \n    file = request.files['file']\n    \n    if file.filename == '':\n        return redirect(url_for('index'))\n        \n    if file and file.filename.endswith('.xlsx'):\n        # Generate a unique filename to avoid collisions\n        unique_filename = str(uuid.uuid4()) + '.xlsx'\n        input_path = os.path.join(UPLOAD_FOLDER, unique_filename)\n        file.save(input_path)\n        \n        try:\n            # Process the file using the analysis script\n            output_path, error = process_excel_file(input_path)\n            \n            if error:\n                # Handle error case\n                os.remove(input_path)  # Clean up the input file\n                return f\"Error processing file: {error}\"\n                \n            # File processed successfully, now handle the download (implemented in next task)\n            # ...\n            \n        except Exception as e:\n            os.remove(input_path)  # Clean up the input file\n            return f\"An unexpected error occurred: {str(e)}\"\n    \n    return redirect(url_for('index'))\n```\n\nEnsure that the analysis script can properly read the Excel file and verify that it contains the expected 'Data' sheet.",
-        "testStrategy": "1. Test processing a valid Excel file with the expected 'Data' sheet\n2. Test processing an Excel file without the required 'Data' sheet\n3. Test processing a corrupted Excel file\n4. Verify that temporary files are cleaned up after processing\n5. Check that appropriate error messages are returned when processing fails",
-        "priority": "high",
+        "title": "Test the End-to-End Workflow",
+        "description": "Perform testing to ensure the application works as expected from file upload to result download.",
+        "details": "- Run the Flask server locally.\n- Open a web browser and navigate to the application.\n- Upload a sample `.xlsx` file.\n- Verify that the analysis runs without errors and that the resulting `analyzed_data.xlsx` file is downloaded correctly.\n- Check the contents of the downloaded file to ensure all sheets and data are correct.",
+        "status": "pending",
+        "priority": "medium",
         "dependencies": [
-          3,
           4
-        ],
-        "status": "pending",
-        "subtasks": []
-      },
-      {
-        "id": 6,
-        "title": "Implement file download functionality",
-        "description": "Create functionality to allow users to download the processed Excel file",
-        "details": "Complete the process_file route to return the processed file for download:\n\n```python\nfrom flask import send_file\n\n@app.route('/process', methods=['POST'])\ndef process_file():\n    # ... [previous code from Task 5] ...\n    \n    if file and file.filename.endswith('.xlsx'):\n        # ... [previous code from Task 5] ...\n        \n        try:\n            # Process the file using the analysis script\n            output_path, error = process_excel_file(input_path)\n            \n            if error:\n                # Handle error case\n                os.remove(input_path)  # Clean up the input file\n                return f\"Error processing file: {error}\"\n                \n            # Determine the output filename (preserve original name but add a suffix)\n            original_name = os.path.splitext(file.filename)[0]\n            download_name = f\"{original_name}_analyzed.xlsx\"\n            \n            # Return the file for download\n            return_value = send_file(\n                output_path,\n                as_attachment=True,\n                download_name=download_name,\n                mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'\n            )\n            \n            # Clean up temporary files (schedule for deletion after response is sent)\n            @after_this_request\n            def remove_files(response):\n                try:\n                    os.remove(input_path)\n                    os.remove(output_path)\n                except Exception as e:\n                    app.logger.error(f\"Error removing temporary files: {e}\")\n                return response\n                \n            return return_value\n            \n        except Exception as e:\n            os.remove(input_path)  # Clean up the input file\n            return f\"An unexpected error occurred: {str(e)}\"\n    \n    return redirect(url_for('index'))\n```\n\nAdd the necessary imports at the top of the file:\n```python\nfrom flask import after_this_request\n```",
-        "testStrategy": "1. Verify that processed files are correctly sent for download\n2. Check that the downloaded file has the correct name format\n3. Confirm that temporary files are removed after the download\n4. Test that the download works with different browsers\n5. Verify that the downloaded Excel file contains all the expected sheets ('Data', 'Tableau_Pass', 'Final_Stats', etc.)",
-        "priority": "high",
-        "dependencies": [
-          5
-        ],
-        "status": "pending",
-        "subtasks": []
-      },
-      {
-        "id": 7,
-        "title": "Implement error handling and user feedback",
-        "description": "Add comprehensive error handling and user feedback mechanisms",
-        "details": "1. Enhance the application with proper error handling and user feedback:\n\n```python\n# In app.py\nfrom flask import flash, jsonify\n\n# Configure flash messages\napp.secret_key = os.urandom(24)\n\n# Add a route for checking processing status via AJAX\n@app.route('/status/<job_id>', methods=['GET'])\ndef check_status(job_id):\n    # This would be more complex with a job queue system\n    # For this simple app, we'll just return a placeholder\n    return jsonify({'status': 'complete'})\n\n# Update the process_file function to use flash messages for errors\n@app.route('/process', methods=['POST'])\ndef process_file():\n    # ... [previous code] ...\n    \n    if 'file' not in request.files:\n        flash('No file part', 'error')\n        return redirect(url_for('index'))\n        \n    file = request.files['file']\n    \n    if file.filename == '':\n        flash('No selected file', 'error')\n        return redirect(url_for('index'))\n        \n    if not file.filename.endswith('.xlsx'):\n        flash('Only Excel (.xlsx) files are supported', 'error')\n        return redirect(url_for('index'))\n    \n    # ... [rest of the function] ...\n    \n    except Exception as e:\n        flash(f\"An unexpected error occurred: {str(e)}\", 'error')\n        return redirect(url_for('index'))\n```\n\n2. Update the HTML template to display flash messages:\n\n```html\n<!-- In index.html, add this after the <h1> tag -->\n{% with messages = get_flashed_messages(with_categories=true) %}\n  {% if messages %}\n    <div class=\"flash-messages\">\n    {% for category, message in messages %}\n      <div class=\"flash-message {{ category }}\">{{ message }}</div>\n    {% endfor %}\n    </div>\n  {% endif %}\n{% endwith %}\n\n<!-- Add this to the <style> section -->\n.flash-messages {\n    margin: 20px 0;\n}\n.flash-message {\n    padding: 10px;\n    margin-bottom: 10px;\n    border-radius: 4px;\n}\n.flash-message.error {\n    background-color: #f8d7da;\n    color: #721c24;\n    border: 1px solid #f5c6cb;\n}\n.flash-message.success {\n    background-color: #d4edda;\n    color: #155724;\n    border: 1px solid #c3e6cb;\n}\n```",
-        "testStrategy": "1. Test all error scenarios to ensure appropriate error messages are displayed\n2. Verify that flash messages appear correctly and with the right styling\n3. Test with various invalid inputs to ensure robust error handling\n4. Check that the user is redirected appropriately after errors\n5. Verify that error messages are clear and actionable",
-        "priority": "medium",
-        "dependencies": [
-          2,
-          6
-        ],
-        "status": "pending",
-        "subtasks": []
-      },
-      {
-        "id": 8,
-        "title": "Implement loading indicator and UI enhancements",
-        "description": "Add a loading indicator and enhance the user interface for better user experience",
-        "details": "1. Enhance the JavaScript in index.html to show a loading indicator during file processing:\n\n```html\n<!-- Update the loading div in index.html -->\n<div id=\"loading\" class=\"loading\">\n    <div class=\"spinner\"></div>\n    <p>Processing your file, please wait...</p>\n</div>\n\n<!-- Add this to the <style> section -->\n.spinner {\n    border: 4px solid rgba(0, 0, 0, 0.1);\n    width: 36px;\n    height: 36px;\n    border-radius: 50%;\n    border-left-color: #09f;\n    animation: spin 1s linear infinite;\n    margin: 0 auto 10px;\n}\n\n@keyframes spin {\n    0% { transform: rotate(0deg); }\n    100% { transform: rotate(360deg); }\n}\n\n<!-- Update the JavaScript section -->\n<script>\n    const form = document.getElementById('upload-form');\n    const loading = document.getElementById('loading');\n    \n    form.addEventListener('submit', function(e) {\n        // Show loading indicator\n        loading.style.display = 'block';\n        \n        // Disable the submit button to prevent multiple submissions\n        const submitButton = form.querySelector('button[type=\"submit\"]');\n        submitButton.disabled = true;\n        submitButton.textContent = 'Processing...';\n    });\n</script>\n```\n\n2. Add additional UI enhancements:\n\n```html\n<!-- Add this to index.html after the form -->\n<div class=\"instructions\">\n    <h3>Instructions:</h3>\n    <ol>\n        <li>Prepare your Excel file with a sheet named 'Data' containing the raw data.</li>\n        <li>Click \"Choose File\" to select your Excel file.</li>\n        <li>Click \"Process File\" to upload and analyze the data.</li>\n        <li>Wait for processing to complete. The analyzed file will download automatically.</li>\n    </ol>\n</div>\n\n<!-- Add this to the <style> section -->\n.instructions {\n    margin-top: 40px;\n    background-color: #f8f9fa;\n    padding: 20px;\n    border-radius: 5px;\n}\n.instructions h3 {\n    margin-top: 0;\n}\n```",
-        "testStrategy": "1. Test the loading indicator appearance during file processing\n2. Verify that the submit button is disabled during processing\n3. Check that the UI is responsive and works well on different screen sizes\n4. Test the user experience flow from upload to download\n5. Verify that the instructions are clear and helpful to users",
-        "priority": "medium",
-        "dependencies": [
-          2,
-          6
-        ],
-        "status": "pending",
-        "subtasks": []
-      },
-      {
-        "id": 9,
-        "title": "Implement file validation",
-        "description": "Add validation to ensure uploaded Excel files have the required 'Data' sheet",
-        "details": "Create a validation function to check if the uploaded Excel file has the required 'Data' sheet before processing:\n\n```python\nimport pandas as pd\n\ndef validate_excel_file(file_path):\n    \"\"\"Validate that the Excel file has the required 'Data' sheet\"\"\"\n    try:\n        # Try to read the 'Data' sheet\n        pd.read_excel(file_path, sheet_name='Data')\n        return True, None\n    except ValueError as e:\n        if \"'Data'\" in str(e) and \"is not in the\" in str(e):\n            # The 'Data' sheet doesn't exist\n            return False, \"The Excel file must contain a sheet named 'Data'\"\n        else:\n            return False, f\"Error validating Excel file: {str(e)}\"\n    except Exception as e:\n        return False, f\"Error validating Excel file: {str(e)}\"\n\n# Update the process_file route to use this validation\n@app.route('/process', methods=['POST'])\ndef process_file():\n    # ... [previous code] ...\n    \n    if file and file.filename.endswith('.xlsx'):\n        # ... [save file code] ...\n        \n        # Validate the Excel file\n        is_valid, error_message = validate_excel_file(input_path)\n        if not is_valid:\n            os.remove(input_path)  # Clean up the input file\n            flash(error_message, 'error')\n            return redirect(url_for('index'))\n        \n        # Continue with processing if valid\n        # ... [rest of the function] ...\n```",
-        "testStrategy": "1. Test with Excel files that have the 'Data' sheet\n2. Test with Excel files that don't have the 'Data' sheet\n3. Test with corrupted Excel files\n4. Verify that appropriate error messages are shown for invalid files\n5. Check that validation occurs before the analysis script is called",
-        "priority": "medium",
-        "dependencies": [
-          4,
-          7
-        ],
-        "status": "pending",
-        "subtasks": []
-      },
-      {
-        "id": 10,
-        "title": "Implement deployment configuration",
-        "description": "Prepare the application for deployment with proper configuration",
-        "details": "1. Create a Procfile for deployment (e.g., for Heroku):\n```\nweb: gunicorn app:app\n```\n\n2. Update requirements.txt with production dependencies:\n```\nflask==2.0.1\npandas==1.3.3\nopenpyxl==3.0.9\nxlsxwriter==3.0.1\ngunicorn==20.1.0\n```\n\n3. Create a runtime.txt file to specify Python version:\n```\npython-3.9.7\n```\n\n4. Update app.py with production-ready configuration:\n```python\nimport os\n\n# ... [rest of the imports and app setup] ...\n\n# Use environment variables for configuration\napp.secret_key = os.environ.get('SECRET_KEY', os.urandom(24))\n\n# Configure for production\nif __name__ == '__main__':\n    port = int(os.environ.get('PORT', 5000))\n    app.run(host='0.0.0.0', port=port, debug=False)\n```\n\n5. Create a .gitignore file:\n```\n__pycache__/\n*.py[cod]\n*$py.class\nvenv/\nenv/\n.env\n.venv\ntemp_uploads/\n*.log\n.DS_Store\n```\n\n6. Create a simple README.md with setup and usage instructions:\n```markdown\n# FPA Local to Web Converter\n\nA web-based version of the FPA data analysis tool.\n\n## Setup\n\n1. Clone this repository\n2. Create a virtual environment: `python -m venv venv`\n3. Activate the virtual environment:\n   - Windows: `venv\\Scripts\\activate`\n   - Unix/MacOS: `source venv/bin/activate`\n4. Install dependencies: `pip install -r requirements.txt`\n5. Run the application: `python app.py`\n\n## Usage\n\n1. Navigate to the application in your web browser\n2. Upload an Excel file with a 'Data' sheet\n3. Wait for processing to complete\n4. The analyzed file will download automatically\n```",
-        "testStrategy": "1. Verify that the application runs correctly with the production configuration\n2. Test the application with the specified dependencies\n3. Check that environment variables are properly used\n4. Verify that the application can be deployed to a platform like Heroku\n5. Test that the application works correctly when deployed",
-        "priority": "low",
-        "dependencies": [
-          1,
-          2,
-          3,
-          4,
-          5,
-          6,
-          7,
-          8,
-          9
-        ],
-        "status": "pending",
-        "subtasks": []
+        ]
       }
     ],
     "metadata": {
-      "created": "2025-11-11T10:02:56.724Z",
-      "updated": "2025-11-11T10:04:07.051Z",
+      "created": "2025-11-25T04:23:14.802Z",
+      "updated": "2025-11-25T04:29:21.953Z",
       "description": "Tasks for master context"
     }
   }
