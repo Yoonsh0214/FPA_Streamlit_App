@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FPA WebApp 사용 설명서</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+
+        h1 {
+            color: #007bff;
+            border-bottom: 3px solid #007bff;
+            padding-bottom: 10px;
+        }
+
+        h2 {
+            color: #0056b3;
+            margin-top: 30px;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 8px;
+        }
+
+        h3 {
+            color: #495057;
+            margin-top: 25px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        th,
+        td {
+            border: 1px solid #dee2e6;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        code {
+            background-color: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #d63384;
+        }
+
+        pre {
+            background-color: #f4f4f4;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+
+        .section {
+            background-color: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .emoji {
+            font-size: 1.2em;
+        }
+
+        ul,
+        ol {
+            margin: 10px 0;
+            padding-left: 25px;
+        }
+
+        li {
+            margin: 5px 0;
+        }
+
+        blockquote {
+            border-left: 4px solid #007bff;
+            margin: 15px 0;
+            padding: 10px 20px;
+            background-color: #e7f3ff;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>📘 FPA WebApp 사용 설명서</h1>
+
+    <div class="section">
+        <h2>🚀 시작하기</h2>
+
+        <h3>1. 경기 정보 입력</h3>
+        <ul>
+            <li><strong>Match ID</strong>: 경기 고유 번호</li>
+            <li><strong>Home Team ID</strong>: 홈팀 ID</li>
+            <li><strong>Away Team ID</strong>: 원정팀 ID</li>
+        </ul>
+
+        <h3>2. 경기 상황 선택</h3>
+        <ul>
+            <li><strong>Half</strong>: 1st (전반전) / 2nd (후반전)</li>
+            <li><strong>Team</strong>: Home (홈팀) / Away (원정팀)</li>
+            <li><strong>Direction</strong>: Right (오른쪽 공격) / Left (왼쪽 공격)</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>⌨️ 기본 조작법</h2>
+
+        <h3>🕐 시간 조정</h3>
+        <ul>
+            <li><strong>수동 입력</strong>: <code>MM:SS</code> 형식으로 직접 입력 (예: <code>15:30</code>)</li>
+            <li><strong>버튼 클릭</strong>:
+                <ul>
+                    <li><code>+1분</code> 버튼: 1분 증가</li>
+                    <li><code>-1분</code> 버튼: 1분 감소</li>
+                </ul>
+            </li>
+            <li><strong>키보드 단축키</strong>:
+                <ul>
+                    <li><code>↑</code> (위 화살표) 또는 <code>→</code> (오른쪽 화살표): +1분</li>
+                    <li><code>↓</code> (아래 화살표) 또는 <code>←</code> (왼쪽 화살표): -1분</li>
+                </ul>
+            </li>
+        </ul>
+
+        <h3>🖱️ 좌표 입력</h3>
+        <ul>
+            <li><strong>좌클릭</strong>: 축구장 이미지를 클릭하여 좌표 추가 (주황색 점 표시)</li>
+            <li><strong>우클릭</strong>: 마지막에 찍은 좌표 삭제</li>
+            <li><strong>자동 변환</strong>: 픽셀 좌표 → 미터 단위 (105m × 68m)</li>
+        </ul>
+
+        <h3>⌨️ 스탯 코드 입력</h3>
+        <p><strong>입력 형식</strong>: <code>선수번호 + 액션코드 + 수신선수번호 + . + 태그코드1.태그코드2...</code></p>
+
+        <p><strong>예시</strong>:</p>
+        <ul>
+            <li><code>10ss8.k</code> → 10번 선수가 8번 선수에게 키패스 (좌표 2개 필요)</li>
+            <li><code>9dd.wf</code> → 9번 선수가 약발로 골 (좌표 1개 필요)</li>
+            <li><code>7d</code> → 7번 선수가 슛 (좌표 1개 필요)</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>⚡ 액션 코드 전체 목록</h2>
+
+        <h3>🎯 슈팅 관련</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>코드</th>
+                    <th>액션</th>
+                    <th>좌표 개수</th>
+                    <th>설명</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>ddd</code></td>
+                    <td>Goal</td>
+                    <td>1개</td>
+                    <td>골</td>
+                </tr>
+                <tr>
+                    <td><code>dd</code></td>
+                    <td>Shot On Target</td>
+                    <td>1개</td>
+                    <td>유효슈팅</td>
+                </tr>
+                <tr>
+                    <td><code>d</code></td>
+                    <td>Shot</td>
+                    <td>1개</td>
+                    <td>슛 (빗나감 포함)</td>
+                </tr>
+                <tr>
+                    <td><code>db</code></td>
+                    <td>Blocked Shot</td>
+                    <td>1개</td>
+                    <td>블락당한 슛</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>⚡ 패스 & 어시스트</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>코드</th>
+                    <th>액션</th>
+                    <th>좌표 개수</th>
+                    <th>설명</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>ss</code></td>
+                    <td>Pass (Success)</td>
+                    <td>2개</td>
+                    <td>패스 성공</td>
+                </tr>
+                <tr>
+                    <td><code>s</code></td>
+                    <td>Pass (Fail)</td>
+                    <td>2개</td>
+                    <td>패스 실패</td>
+                </tr>
+                <tr>
+                    <td><code>zz</code></td>
+                    <td>Assist</td>
+                    <td>2개</td>
+                    <td>어시스트</td>
+                </tr>
+                <tr>
+                    <td><code>z</code></td>
+                    <td>Key Pass</td>
+                    <td>2개</td>
+                    <td>키패스</td>
+                </tr>
+                <tr>
+                    <td><code>cc</code></td>
+                    <td>Cross (Success)</td>
+                    <td>2개</td>
+                    <td>크로스 성공</td>
+                </tr>
+                <tr>
+                    <td><code>c</code></td>
+                    <td>Cross (Fail)</td>
+                    <td>2개</td>
+                    <td>크로스 실패</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>🏃 공격 플레이</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>코드</th>
+                    <th>액션</th>
+                    <th>좌표 개수</th>
+                    <th>설명</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>ee</code></td>
+                    <td>Breakthrough</td>
+                    <td>2개</td>
+                    <td>돌파</td>
+                </tr>
+                <tr>
+                    <td><code>rr</code></td>
+                    <td>Dribble</td>
+                    <td>1개</td>
+                    <td>드리블</td>
+                </tr>
+                <tr>
+                    <td><code>gp</code></td>
+                    <td>Gain</td>
+                    <td>1개</td>
+                    <td>볼 획득</td>
+                </tr>
+                <tr>
+                    <td><code>m</code></td>
+                    <td>Miss</td>
+                    <td>1개</td>
+                    <td>컨트롤 미스</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>🛡️ 수비 플레이</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>코드</th>
+                    <th>액션</th>
+                    <th>좌표 개수</th>
+                    <th>설명</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>aa</code></td>
+                    <td>Tackle</td>
+                    <td>1개</td>
+                    <td>태클</td>
+                </tr>
+                <tr>
+                    <td><code>q</code></td>
+                    <td>Intercept</td>
+                    <td>1개</td>
+                    <td>인터셉트</td>
+                </tr>
+                <tr>
+                    <td><code>qq</code></td>
+                    <td>Acquisition</td>
+                    <td>1개</td>
+                    <td>볼 탈취</td>
+                </tr>
+                <tr>
+                    <td><code>w</code></td>
+                    <td>Clear</td>
+                    <td>1개</td>
+                    <td>클리어링</td>
+                </tr>
+                <tr>
+                    <td><code>ww</code></td>
+                    <td>Cutout</td>
+                    <td>1개</td>
+                    <td>차단</td>
+                </tr>
+                <tr>
+                    <td><code>qw</code></td>
+                    <td>Block</td>
+                    <td>1개</td>
+                    <td>블록</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>🧤 골키퍼</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>코드</th>
+                    <th>액션</th>
+                    <th>좌표 개수</th>
+                    <th>설명</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>v</code></td>
+                    <td>Catching</td>
+                    <td>1개</td>
+                    <td>캐칭</td>
+                </tr>
+                <tr>
+                    <td><code>vv</code></td>
+                    <td>Punching</td>
+                    <td>1개</td>
+                    <td>펀칭</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>🟨 기타</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>코드</th>
+                    <th>액션</th>
+                    <th>좌표 개수</th>
+                    <th>설명</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>bb</code></td>
+                    <td>Duel (Success)</td>
+                    <td>1개</td>
+                    <td>경합 성공</td>
+                </tr>
+                <tr>
+                    <td><code>b</code></td>
+                    <td>Duel (Fail)</td>
+                    <td>1개</td>
+                    <td>경합 실패</td>
+                </tr>
+                <tr>
+                    <td><code>f</code></td>
+                    <td>Foul</td>
+                    <td>1개</td>
+                    <td>파울</td>
+                </tr>
+                <tr>
+                    <td><code>ff</code></td>
+                    <td>Be Fouled</td>
+                    <td>1개</td>
+                    <td>파울 당함</td>
+                </tr>
+                <tr>
+                    <td><code>o</code></td>
+                    <td>Offside</td>
+                    <td>1개</td>
+                    <td>오프사이드</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>🏷️ 태그 코드 전체 목록</h2>
+
+        <h3>수동 태그 (직접 입력)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>코드</th>
+                    <th>태그</th>
+                    <th>설명</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>k</code></td>
+                    <td>Key</td>
+                    <td>키패스 (결정적 패스)</td>
+                </tr>
+                <tr>
+                    <td><code>a</code></td>
+                    <td>Assist</td>
+                    <td>어시스트</td>
+                </tr>
+                <tr>
+                    <td><code>h</code></td>
+                    <td>Header</td>
+                    <td>헤더</td>
+                </tr>
+                <tr>
+                    <td><code>r</code></td>
+                    <td>Aerial</td>
+                    <td>공중볼 경합</td>
+                </tr>
+                <tr>
+                    <td><code>w</code></td>
+                    <td>Suffered</td>
+                    <td>파울 당함</td>
+                </tr>
+                <tr>
+                    <td><code>n</code></td>
+                    <td>In-box</td>
+                    <td>박스 안</td>
+                </tr>
+                <tr>
+                    <td><code>u</code></td>
+                    <td>Out-box</td>
+                    <td>박스 밖</td>
+                </tr>
+                <tr>
+                    <td><code>p</code></td>
+                    <td>Progressive</td>
+                    <td>진전 패스</td>
+                </tr>
+                <tr>
+                    <td><code>c</code></td>
+                    <td>Counter Attack</td>
+                    <td>역습</td>
+                </tr>
+                <tr>
+                    <td><code>sw</code></td>
+                    <td>Switch</td>
+                    <td>사이드 전환</td>
+                </tr>
+                <tr>
+                    <td><code>wf</code></td>
+                    <td>Weak Foot</td>
+                    <td>약발</td>
+                </tr>
+                <tr>
+                    <td><code>ft</code></td>
+                    <td>First Time</td>
+                    <td>원터치</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>자동 태그 (시스템 자동 추가)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>태그</th>
+                    <th>조건</th>
+                    <th>설명</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Success</td>
+                    <td>액션 코드가 2번 반복 (예: <code>ss</code>, <code>cc</code>, <code>dd</code>)</td>
+                    <td>성공</td>
+                </tr>
+                <tr>
+                    <td>Fail</td>
+                    <td>액션 코드가 1번만 (예: <code>s</code>, <code>c</code>, <code>d</code>)</td>
+                    <td>실패</td>
+                </tr>
+                <tr>
+                    <td>Progressive</td>
+                    <td>시작점 대비 10m 이상 전진한 패스</td>
+                    <td>진전 패스</td>
+                </tr>
+                <tr>
+                    <td>In-box</td>
+                    <td>페널티 박스 내에서 이벤트 발생</td>
+                    <td>박스 안</td>
+                </tr>
+                <tr>
+                    <td>Out-box</td>
+                    <td>슛이 박스 밖에서 발생</td>
+                    <td>박스 밖</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>💡 스탯 입력 예시</h2>
+
+        <h3>예시 1: 일반 패스</h3>
+        <pre><code>입력: 10ss8
+의미: 10번 선수가 8번 선수에게 패스 성공
+좌표: 2개 (시작점, 끝점)
+자동 태그: Success</code></pre>
+
+        <h3>예시 2: 키패스</h3>
+        <pre><code>입력: 7ss9.k
+의미: 7번 선수가 9번 선수에게 키패스
+좌표: 2개
+자동 태그: Success, Key</code></pre>
+
+        <h3>예시 3: 골</h3>
+        <pre><code>입력: 11ddd.wf
+의미: 11번 선수가 약발로 골 성공
+좌표: 1개 (슈팅 위치)
+자동 태그: Success, Weak Foot, In-box 또는 Out-box</code></pre>
+
+        <h3>예시 4: 헤더 골</h3>
+        <pre><code>입력: 9ddd.h
+의미: 9번 선수가 헤더로 골
+좌표: 1개
+자동 태그: Success, Header, In-box</code></pre>
+
+        <h3>예시 5: 역습 상황 골</h3>
+        <pre><code>입력: 10ddd.c.wf
+의미: 10번 선수가 역습 상황에서 약발로 골
+좌표: 1개
+자동 태그: Success, Counter Attack, Weak Foot, In-box</code></pre>
+    </div>
+
+    <div class="section">
+        <h2>❓ 문제 해결</h2>
+
+        <h3>자주 묻는 질문</h3>
+
+        <p><strong>Q: 좌표를 잘못 찍었어요</strong><br>
+            A: 축구장에서 <strong>우클릭</strong>하면 마지막에 찍은 점이 삭제됩니다.</p>
+
+        <p><strong>Q: 로그를 잘못 기록했어요</strong><br>
+            A: <code>마지막 로그 삭제</code> 버튼을 클릭하면 가장 최근 로그가 삭제됩니다.</p>
+
+        <p><strong>Q: 패스 입력 시 좌표가 왜 2개 필요한가요?</strong><br>
+            A: 시작점(패스한 위치)과 끝점(패스 받은 위치)을 모두 기록하여 패스 거리와 방향을 분석합니다.</p>
+
+        <p><strong>Q: Progressive Pass가 자동으로 안 붙는데요?</strong><br>
+            A: Direction(공격 방향) 설정을 확인하고, 골라인 방향으로 10m 이상 전진했는지 확인하세요.</p>
+
+        <p><strong>Q: 시간이 자동으로 증가하지 않아요</strong><br>
+            A: 현재 버전은 수동 시간 입력 방식입니다. 화살표 키나 +1분/-1분 버튼으로 조정하세요.</p>
+    </div>
+
+    <div class="section">
+        <h2>📊 데이터 분석 및 내보내기</h2>
+
+        <h3>실시간 분석</h3>
+        <ol>
+            <li>스탯을 계속 기록</li>
+            <li><code>현재 로그 분석 및 Excel로 내보내기</code> 버튼 클릭</li>
+            <li>엑셀 파일 다운로드 (<code>live_analyzed_data.xlsx</code>)</li>
+        </ol>
+
+        <h3>파일 업로드 분석</h3>
+        <ol>
+            <li><code>파일 업로드</code> 모드로 전환</li>
+            <li>기존 엑셀 파일 업로드 ('Data' 시트 포함)</li>
+            <li>자동 분석 후 새 파일 다운로드 (<code>uploaded_analyzed_data.xlsx</code>)</li>
+        </ol>
+
+        <h3>엑셀 파일 구성</h3>
+        <ul>
+            <li><strong>Data</strong>: 전체 로그 및 분석 결과</li>
+            <li><strong>Tableau_Pass</strong>: Tableau 시각화용 변환 데이터</li>
+            <li><strong>Pass_Summary</strong>: 패스 요약 통계</li>
+            <li><strong>Shooting_Summary</strong>: 슈팅 요약 통계</li>
+            <li><strong>Cross_Summary</strong>: 크로스 요약 통계</li>
+            <li><strong>Advanced_Summary</strong>: 고급 지표 (드리블, 태클, 인터셉트 등)</li>
+            <li><strong>Final_Stats</strong>: 선수별 종합 능력치 점수</li>
+        </ul>
+    </div>
+
+    <div style="text-align: center; margin-top: 40px; padding: 20px; background-color: #e9ecef; border-radius: 5px;">
+        <p><strong>📝 마지막 업데이트</strong>: 2025-12-02</p>
+        <p><strong>버전</strong>: 1.1.0</p>
+    </div>
+</body>
+
+</html>

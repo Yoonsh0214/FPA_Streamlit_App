@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <title>FPA Live Analyzer</title>
@@ -11,34 +12,78 @@
             --card-bg: #ffffff;
             --text-color: #333;
             --border-color: #dee2e6;
-            --shadow: 0 2px 4px rgba(0,0,0,0.08);
+            --shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
         }
-        body { 
+
+        body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: var(--bg-color); 
-            margin: 0; 
-            padding: 15px; 
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 15px;
             color: var(--text-color);
             font-size: 14px;
         }
-        .card { 
-            background: var(--card-bg); 
-            border-radius: 6px; 
-            padding: 15px; 
-            box-shadow: var(--shadow); 
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 6px;
+            padding: 15px;
+            box-shadow: var(--shadow);
             border: 1px solid var(--border-color);
         }
-        .main-container { display: flex; width: 100%; max-width: 1600px; margin: auto; gap: 15px; align-items: stretch; }
-        .controls-container { width: 400px; flex-shrink: 0; }
-        .right-column { flex-grow: 1; display: flex; flex-direction: column; gap: 15px; }
-        .right-column .card { width: 100%; box-sizing: border-box; }
-        
-        h1 { font-size: 24px; }
-        h2 { font-size: 20px; color: var(--primary-color); }
-        h4 { font-size: 16px; color: var(--primary-color); margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-bottom: 15px; }
 
-        .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        input[type="text"], textarea {
+        .main-container {
+            display: flex;
+            width: 100%;
+            max-width: 1600px;
+            margin: auto;
+            gap: 15px;
+            align-items: stretch;
+        }
+
+        .controls-container {
+            width: 400px;
+            flex-shrink: 0;
+        }
+
+        .right-column {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .right-column .card {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            font-size: 24px;
+        }
+
+        h2 {
+            font-size: 20px;
+            color: var(--primary-color);
+        }
+
+        h4 {
+            font-size: 16px;
+            color: var(--primary-color);
+            margin-top: 0;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        input[type="text"],
+        textarea {
             width: 100%;
             padding: 8px;
             border: 1px solid var(--border-color);
@@ -47,47 +92,85 @@
             transition: border-color 0.2s;
             font-size: 14px;
         }
-        input[type="text"]:focus, textarea:focus {
+
+        input[type="text"]:focus,
+        textarea:focus {
             outline: none;
             border-color: var(--primary-color);
         }
-        .radio-group { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
-        
-        #field-wrapper { position: relative; }
-        #field-image { width: 100%; display: block; border-radius: 5px; }
-        .dot { position: absolute; width: 10px; height: 10px; background-color: #FF7740; border-radius: 50%; transform: translate(-50%, -50%); border: 1.5px solid white; }
-        
-        button { 
-            width: 100%; 
-            padding: 10px; 
-            border: none; 
-            border-radius: 4px; 
-            background-color: var(--primary-color); 
-            color: white; 
-            cursor: pointer; 
+
+        .radio-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        #field-wrapper {
+            position: relative;
+        }
+
+        #field-image {
+            width: 100%;
+            display: block;
+            border-radius: 5px;
+        }
+
+        .dot {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #FF7740;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            border: 1.5px solid white;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            background-color: var(--primary-color);
+            color: white;
+            cursor: pointer;
             font-size: 14px;
             font-weight: bold;
             transition: background-color 0.2s;
         }
-        button:hover { background-color: var(--primary-hover); }
-        .button-group { display: flex; gap: 10px; }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
 
         #mode-selector button {
             background-color: #e9ecef;
             color: var(--text-color);
             flex: 1;
         }
+
         #mode-selector button.active {
             background-color: var(--primary-color);
             color: white;
         }
 
         @media (max-width: 1200px) {
-            .main-container { flex-direction: column; }
-            .controls-container { width: 100%; }
+            .main-container {
+                flex-direction: column;
+            }
+
+            .controls-container {
+                width: 100%;
+            }
         }
     </style>
 </head>
+
 <body>
     <div style="width: 100%; max-width: 1000px; margin: auto;">
         <div class="card" style="margin-bottom: 20px;">
@@ -95,6 +178,7 @@
             <div id="mode-selector" style="display: flex; gap: 10px; margin-bottom: 20px;">
                 <button id="btn-live-mode">⚽ 실시간 입력</button>
                 <button id="btn-upload-mode">📄 파일 업로드</button>
+                <button id="btn-manual-mode">📘 사용 설명서</button>
             </div>
         </div>
 
@@ -112,21 +196,31 @@
                         <input type="text" id="teamid_a" placeholder="Away Team ID">
                     </div>
                     <div class="radio-group">
-                        <p>Half:</p> <input type="radio" id="half_1st" name="half" value="1st" checked> <label for="half_1st">1st</label>
+                        <p>Half:</p> <input type="radio" id="half_1st" name="half" value="1st" checked> <label
+                            for="half_1st">1st</label>
                         <input type="radio" id="half_2nd" name="half" value="2nd"> <label for="half_2nd">2nd</label>
                     </div>
                     <div class="radio-group">
-                        <p>Team:</p> <input type="radio" id="team_home" name="team" value="home" checked> <label for="team_home">Home</label>
+                        <p>Team:</p> <input type="radio" id="team_home" name="team" value="home" checked> <label
+                            for="team_home">Home</label>
                         <input type="radio" id="team_away" name="team" value="away"> <label for="team_away">Away</label>
                     </div>
                     <div class="radio-group">
-                        <p>Direction:</p> <input type="radio" id="dir_right" name="direction" value="right" checked> <label for="dir_right">Right</label>
-                        <input type="radio" id="dir_left" name="direction" value="left"> <label for="dir_left">Left</label>
+                        <p>Direction:</p> <input type="radio" id="dir_right" name="direction" value="right" checked>
+                        <label for="dir_right">Right</label>
+                        <input type="radio" id="dir_left" name="direction" value="left"> <label
+                            for="dir_left">Left</label>
                     </div>
                 </div>
                 <div class="card">
                     <h4>시간 및 스탯</h4>
-                    <input type="text" id="timeline" value="00:00">
+                    <label style="margin-bottom: 5px; display: block; font-weight: bold;">경기 시간 (↑↓ 키로 조정)</label>
+                    <div style="display: flex; gap: 5px; align-items: center; margin-bottom: 10px;">
+                        <button id="time_minus" style="width: 50px; background-color: #6c757d;">-1분</button>
+                        <input type="text" id="timeline" value="00:00"
+                            style="flex: 1; text-align: center; font-weight: bold; font-size: 16px;">
+                        <button id="time_plus" style="width: 50px; background-color: #6c757d;">+1분</button>
+                    </div>
                     <input type="text" id="stat_input" placeholder="스탯 코드 (예: 10ss8.k)">
                     <button id="submit_stat">스탯 기록</button>
                 </div>
@@ -139,9 +233,9 @@
                         <img id="field-image" src="/static/assets/football_field.png" alt="Football Field">
                     </div>
                 </div>
-            <div class="card">
-                <h4>기록된 로그</h4>
-                <textarea id="log_display" rows="12"></textarea>
+                <div class="card">
+                    <h4>기록된 로그</h4>
+                    <textarea id="log_display" rows="12"></textarea>
                     <div class="button-group">
                         <button id="delete_last">마지막 로그 삭제</button>
                         <button id="export_logs">현재 로그 분석 및 Excel로 내보내기</button>
@@ -150,16 +244,22 @@
             </div>
         </div>
 
-    <!-- 파일 업로드 모드 -->
-    <div id="upload-mode-container" class="card" style="display: none;">
-        <h2>파일 업로드하여 분석</h2>
-        <p>'Data' 시트가 포함된 .xlsx 파일을 업로드하세요.</p>
-        <form id="upload-form">
-            <input type="file" name="file" id="file-input" accept=".xlsx" required>
-            <button type="submit">파일 분석 및 다운로드</button>
-        </form>
+        <!-- 파일 업로드 모드 -->
+        <div id="upload-mode-container" class="card" style="display: none;">
+            <h2>파일 업로드하여 분석</h2>
+            <p>'Data' 시트가 포함된 .xlsx 파일을 업로드하세요.</p>
+            <form id="upload-form">
+                <input type="file" name="file" id="file-input" accept=".xlsx" required>
+                <button type="submit">파일 분석 및 다운로드</button>
+            </form>
+        </div>
+
+        <!-- 사용 설명서 모드 -->
+        <div id="manual-mode-container" class="card" style="display: none; max-height: 80vh; overflow-y: auto;">
+            <h2>📘 FPA WebApp 사용 설명서</h2>
+            <iframe src="/static/MANUAL.html" style="width: 100%; height: 70vh; border: none;"></iframe>
+        </div>
     </div>
-</div>
 
     <script>
         const FIELD_WIDTH_M = 105;
@@ -174,30 +274,100 @@
         // 모드 전환 로직
         const liveModeContainer = document.getElementById('live-mode-container');
         const uploadModeContainer = document.getElementById('upload-mode-container');
+        const manualModeContainer = document.getElementById('manual-mode-container');
         const btnLiveMode = document.getElementById('btn-live-mode');
         const btnUploadMode = document.getElementById('btn-upload-mode');
+        const btnManualMode = document.getElementById('btn-manual-mode');
 
         function setMode(mode) {
+            // 모든 컨테이너 숨기기
+            liveModeContainer.style.display = 'none';
+            uploadModeContainer.style.display = 'none';
+            manualModeContainer.style.display = 'none';
+
+            // 모든 버튼 비활성화
+            btnLiveMode.classList.remove('active');
+            btnUploadMode.classList.remove('active');
+            btnManualMode.classList.remove('active');
+
+            // 선택된 모드만 표시
             if (mode === 'live') {
                 liveModeContainer.style.display = 'flex';
-                uploadModeContainer.style.display = 'none';
                 btnLiveMode.classList.add('active');
-                btnUploadMode.classList.remove('active');
-            } else {
-                liveModeContainer.style.display = 'none';
+            } else if (mode === 'upload') {
                 uploadModeContainer.style.display = 'block';
-                btnLiveMode.classList.remove('active');
                 btnUploadMode.classList.add('active');
+            } else if (mode === 'manual') {
+                manualModeContainer.style.display = 'block';
+                btnManualMode.classList.add('active');
             }
         }
-        
+
         btnLiveMode.addEventListener('click', () => setMode('live'));
         btnUploadMode.addEventListener('click', () => setMode('upload'));
+        btnManualMode.addEventListener('click', () => setMode('manual'));
 
         // 초기 모드 설정
         setMode('live');
 
+        // --- 시간 조정 기능 ---
+        const timelineInput = document.getElementById('timeline');
+
+        // 시간을 파싱하여 총 초로 변환
+        function parseTime(timeStr) {
+            const parts = timeStr.split(':');
+            if (parts.length === 2) {
+                return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+            }
+            return 0;
+        }
+
+        // 총 초를 MM:SS 형식으로 변환
+        function formatTime(totalSeconds) {
+            if (totalSeconds < 0) totalSeconds = 0;
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        // 시간 증가 함수
+        function incrementTime(minutes) {
+            const currentSeconds = parseTime(timelineInput.value);
+            const newSeconds = currentSeconds + (minutes * 60);
+            timelineInput.value = formatTime(newSeconds);
+        }
+
+        // +1분 버튼
+        document.getElementById('time_plus').addEventListener('click', () => {
+            incrementTime(1);
+        });
+
+        // -1분 버튼
+        document.getElementById('time_minus').addEventListener('click', () => {
+            incrementTime(-1);
+        });
+
+        // 키보드 단축키 (화살표 키)
+        document.addEventListener('keydown', (event) => {
+            // 입력 필드에 포커스가 있을 때는 작동하지 않도록
+            if (event.target.tagName === 'INPUT' && event.target.id !== 'timeline') {
+                return;
+            }
+
+            // 화살표 위 또는 오른쪽: +1분
+            if (event.key === 'ArrowUp' || event.key === 'ArrowRight') {
+                event.preventDefault();
+                incrementTime(1);
+            }
+            // 화살표 아래 또는 왼쪽: -1분
+            else if (event.key === 'ArrowDown' || event.key === 'ArrowLeft') {
+                event.preventDefault();
+                incrementTime(-1);
+            }
+        });
+
         // 실시간 입력 로직
+        // 좌클릭: 점 추가
         fieldWrapper.addEventListener('click', (event) => {
             const rect = fieldImage.getBoundingClientRect();
             const x = event.clientX - rect.left;
@@ -205,9 +375,25 @@
 
             const meter_x = (x / rect.width * FIELD_WIDTH_M).toFixed(2);
             const meter_y = ((rect.height - y) / rect.height * FIELD_HEIGHT_M).toFixed(2);
-            
+
             dots.push({ x, y, meter_x, meter_y });
             drawDot(x, y);
+        });
+
+        // 우클릭: 마지막 점 삭제
+        fieldWrapper.addEventListener('contextmenu', (event) => {
+            event.preventDefault(); // 기본 컨텍스트 메뉴 차단
+
+            if (dots.length > 0) {
+                // 배열에서 마지막 점 제거
+                dots.pop();
+
+                // 화면에서 마지막 점 제거
+                const dotElements = document.querySelectorAll('.dot');
+                if (dotElements.length > 0) {
+                    dotElements[dotElements.length - 1].remove();
+                }
+            }
         });
 
         function drawDot(x, y) {
@@ -332,4 +518,5 @@
         });
     </script>
 </body>
+
 </html>
