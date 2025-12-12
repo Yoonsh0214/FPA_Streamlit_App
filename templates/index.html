@@ -7,8 +7,8 @@
     <title>FPA Live Analyzer</title>
     <style>
         :root {
-            --primary-color: #007bff;
-            --primary-hover: #0056b3;
+            --primary-color: #FF7400;
+            --primary-hover: #cc5d00;
             --bg-color: #f0f2f5;
             --card-bg: #ffffff;
             --text-color: #333;
@@ -35,6 +35,7 @@
 
         .main-container {
             display: flex;
+            flex-direction: column;
             width: 100%;
             max-width: 1600px;
             margin: auto;
@@ -43,20 +44,47 @@
         }
 
         .controls-container {
-            width: 400px;
+            width: 100%;
+            display: flex;
+            gap: 15px;
             flex-shrink: 0;
         }
 
-        .right-column {
+        .controls-container>.card {
+            flex: 1;
+        }
+
+        .visual-container {
             flex-grow: 1;
+            display: flex;
+            flex-direction: row;
+            gap: 15px;
+        }
+
+        .visual-container>.card:first-child {
+            flex: 1;
+        }
+
+        .visual-container>.card:last-child {
+            flex: 1.5;
+        }
+
+        .visual-container .card {
+            width: 100%;
+            box-sizing: border-box;
             display: flex;
             flex-direction: column;
             gap: 15px;
         }
 
-        .right-column .card {
-            width: 100%;
-            box-sizing: border-box;
+        .visual-container h2 {
+            margin: 0;
+        }
+
+        #log_display {
+            flex-grow: 1;
+            height: 100%;
+            resize: none;
         }
 
         h1 {
@@ -79,7 +107,7 @@
 
         .input-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr;
             gap: 10px;
         }
 
@@ -100,11 +128,79 @@
             border-color: var(--primary-color);
         }
 
-        .radio-group {
+        /* 탭 스타일 */
+        .radio-row {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            margin-top: 15px;
+            flex: 1;
+        }
+
+        .radio-row p {
+            font-size: 10px;
+            margin: 0;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .tabs {
+            display: flex;
+            position: relative;
+            background-color: #fff;
+            background-color: #fff;
+            box-shadow: 0 1px 3px 0 rgba(255, 116, 0, 0.1);
+            padding: 0.25rem;
+            /* 패딩 약간 조정 */
+            border-radius: 12px;
+            width: fit-content;
+        }
+
+        .tabs * {
+            z-index: 2;
+        }
+
+        .tabs input[type="radio"] {
+            display: none;
+        }
+
+        .tab {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-top: 8px;
+            justify-content: center;
+            height: 30px;
+            width: 50px;
+            font-size: .8rem;
+            color: black;
+            font-weight: 500;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: color 0.15s ease-in;
+            margin: 0;
+        }
+
+        .tabs input[type="radio"]:checked+label {
+            color: #FF7400;
+        }
+
+        .glider {
+            position: absolute;
+            display: flex;
+            height: 30px;
+            width: 50px;
+            background-color: #fff0e6;
+            z-index: 1;
+            border-radius: 12px;
+            transition: 0.25s ease-out;
+        }
+
+        .tabs input[type="radio"]:nth-of-type(1):checked~.glider {
+            transform: translateX(0);
+        }
+
+        .tabs input[type="radio"]:nth-of-type(2):checked~.glider {
+            transform: translateX(100%);
         }
 
         #field-wrapper {
@@ -153,6 +249,7 @@
             background-color: #e9ecef;
             color: var(--text-color);
             flex: 1;
+            padding: 8px;
         }
 
         #mode-selector button.active {
@@ -173,10 +270,12 @@
 </head>
 
 <body>
-    <div style="width: 100%; max-width: 1000px; margin: 16px auto;">
+    <div style="width: 100%; max-width: 1000px; margin: 0 auto;">
         <div class="card" style="margin-bottom: 20px;">
-            <h1>FPA Live Analyzer</h1>
-            <div id="mode-selector" style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <div style="display: flex; margin-bottom: 8px;">
+                <img id="logo" src="/static/assets/logo.png" alt="logo" style="width: 200px;">
+            </div>
+            <div id="mode-selector" style="display: flex; gap: 10px;">
                 <button id="btn-live-mode">⚽ 실시간 입력</button>
                 <button id="btn-upload-mode">📄 파일 업로드</button>
                 <button id="btn-manual-mode">📘 사용 설명서</button>
@@ -185,32 +284,65 @@
 
         <!-- 실시간 입력 모드 -->
         <div id="live-mode-container" class="main-container">
-            <!-- 왼쪽 컨트롤 패널 -->
-            <div class="controls-container card">
-                <img id="logo" src="/static/assets/logo.png" alt="logo" style="width: 200px; margin-bottom: 20px;">
-                <h2>입력 컨트롤</h2>
+
+            <!-- 상단: 로그 + 축구장 (visual-container) -->
+            <div class="visual-container">
+                <div class="card">
+                    <h2>기록된 로그</h2>
+                    <textarea id="log_display" rows="12"></textarea>
+                    <div class="button-group">
+                        <button id="export_logs">분석 및 내보내기</button>
+                        <button id="delete_last">마지막 로그 삭제</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <h2>축구장</h2>
+                    <div id="field-wrapper">
+                        <img id="field-image" src="/static/assets/football_field.png" alt="Football Field">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 하단: 입력 컨트롤 (controls-container) -->
+            <div class="controls-container">
                 <div class="card">
                     <h4>경기 정보</h4>
                     <div class="input-grid">
-                        <input type="text" id="match_id" placeholder="Match ID">
                         <input type="text" id="teamid_h" placeholder="Home Team ID">
+                        <input type="text" id="match_id" placeholder="Match ID">
                         <input type="text" id="teamid_a" placeholder="Away Team ID">
                     </div>
-                    <div class="radio-group">
-                        <p>Half:</p> <input type="radio" id="half_1st" name="half" value="1st" checked> <label
-                            for="half_1st">1st</label>
-                        <input type="radio" id="half_2nd" name="half" value="2nd"> <label for="half_2nd">2nd</label>
-                    </div>
-                    <div class="radio-group">
-                        <p>Team:</p> <input type="radio" id="team_home" name="team" value="home" checked> <label
-                            for="team_home">Home</label>
-                        <input type="radio" id="team_away" name="team" value="away"> <label for="team_away">Away</label>
-                    </div>
-                    <div class="radio-group">
-                        <p>Direction:</p> <input type="radio" id="dir_right" name="direction" value="right" checked>
-                        <label for="dir_right">Right</label>
-                        <input type="radio" id="dir_left" name="direction" value="left"> <label
-                            for="dir_left">Left</label>
+                    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                        <div class="radio-row" style="margin-top: 15px;">
+                            <p>Half:</p>
+                            <div class="tabs">
+                                <input type="radio" id="half_1st" name="half" value="1st" checked>
+                                <label class="tab" for="half_1st">1st</label>
+                                <input type="radio" id="half_2nd" name="half" value="2nd">
+                                <label class="tab" for="half_2nd">2nd</label>
+                                <span class="glider"></span>
+                            </div>
+                        </div>
+                        <div class="radio-row" style="margin-top: 15px;">
+                            <p>Direction:</p>
+                            <div class="tabs">
+                                <input type="radio" id="dir_right" name="direction" value="right" checked>
+                                <label class="tab" for="dir_right">Right</label>
+                                <input type="radio" id="dir_left" name="direction" value="left">
+                                <label class="tab" for="dir_left">Left</label>
+                                <span class="glider"></span>
+                            </div>
+                        </div>
+                        <div class="radio-row" style="margin-top: 15px;">
+                            <p>Team:</p>
+                            <div class="tabs">
+                                <input type="radio" id="team_home" name="team" value="home" checked>
+                                <label class="tab" for="team_home">Home</label>
+                                <input type="radio" id="team_away" name="team" value="away">
+                                <label class="tab" for="team_away">Away</label>
+                                <span class="glider"></span>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="card">
@@ -222,25 +354,8 @@
                             style="flex: 1; text-align: center; font-weight: bold; font-size: 16px;">
                         <button id="time_plus" style="width: 50px; background-color: #6c757d;">+1분</button>
                     </div>
-                    <input type="text" id="stat_input" placeholder="스탯 코드 (예: 10ss8.k)">
+                    <input type="text" id="stat_input" placeholder="스탯 코드 (예: 10ss8.k)" style="margin-bottom: 12px;">
                     <button id="submit_stat">스탯 기록</button>
-                </div>
-            </div>
-            <!-- 오른쪽 컬럼 (축구장 + 로그) -->
-            <div class="right-column">
-                <div class="card">
-                    <h2>축구장</h2>
-                    <div id="field-wrapper">
-                        <img id="field-image" src="/static/assets/football_field.png" alt="Football Field">
-                    </div>
-                </div>
-                <div class="card">
-                    <h4>기록된 로그</h4>
-                    <textarea id="log_display" rows="12"></textarea>
-                    <div class="button-group">
-                        <button id="delete_last">마지막 로그 삭제</button>
-                        <button id="export_logs">현재 로그 분석 및 Excel로 내보내기</button>
-                    </div>
                 </div>
             </div>
         </div>
