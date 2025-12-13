@@ -109,7 +109,17 @@ def generate_log():
         if tags_list:
             log_text += f" | Tags: {', '.join(sorted(list(set(tags_list))))}"
         
-        return jsonify({"log_text": log_text})
+        # UI 표 출력을 위한 구조화된 데이터 생성
+        coord_str = f"Pos({start_x}, {start_y})"
+        log_data = {
+            "Time": timeline,
+            "Team": team,
+            "Player": player_from,
+            "Action": action_name,
+            "Coord": coord_str
+        }
+
+        return jsonify({"log_text": log_text, "log_data": log_data})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 400

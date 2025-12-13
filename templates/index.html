@@ -8,12 +8,29 @@
     <style>
         :root {
             --primary-color: #FF7400;
-            --primary-hover: #cc5d00;
-            --bg-color: #f0f2f5;
+            /* Original Primary (Keep for Logo/Highlights if needed) */
+            --soft-primary: #FFAB40;
+            /* Lighter Button Color */
+            --soft-primary-hover: #FF9100;
+            --bg-color: #fcfaf9;
+            /* Warm Neutral (Gray + Hint of Orange) */
             --card-bg: #ffffff;
             --text-color: #333;
-            --border-color: #dee2e6;
+            --border-color: #eaddd5;
+            /* Warm Border */
             --shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+            /* Revert shadow */
+            --gray-light: #fbf8f6;
+            /* Warm Light Gray */
+            --gray-medium: #eee5e0;
+            /* Warm Medium Gray */
+        }
+
+        /* Specific override for placeholder */
+        ::placeholder {
+            color: #adb5bd;
+            font-weight: normal;
+            font-size: 14px;
         }
 
         body {
@@ -259,17 +276,50 @@
         button {
             width: 100%;
             padding: 10px;
-            border: none;
+            border: 1px solid var(--border-color);
             border-radius: 4px;
-            background-color: var(--primary-color);
-            color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: #f8f6f4;
+            /* Light Warm Gray to distinguish from inputs */
+            color: #333;
+            /* Dark Text */
             cursor: pointer;
             font-size: 14px;
             font-weight: bold;
-            transition: background-color 0.2s;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            /* Add Shadow */
+            transition: all 0.2s;
         }
 
         button:hover {
+            background-color: #eee5e0;
+            /* Slightly darker warm gray on hover */
+            border-color: #dbe0e4;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Keep Submit Button Vibrant */
+        #submit_stat {
+            background-color: var(--primary-color);
+            color: white;
+            border: 1px solid var(--primary-color);
+            box-shadow: 0 2px 4px rgba(255, 116, 0, 0.2);
+        }
+
+        #submit_stat:hover {
+            background-color: var(--primary-hover);
+            border-color: var(--primary-hover);
+            box-shadow: 0 4px 8px rgba(255, 116, 0, 0.3);
+        }
+
+        #export_logs {
+            background-color: var(--primary-color);
+            color: white;
+            border: 1px solid var(--primary-color);
+        }
+
+        #export_logs:hover {
             background-color: var(--primary-hover);
         }
 
@@ -279,15 +329,30 @@
         }
 
         #mode-selector button {
-            background-color: #e9ecef;
-            color: var(--text-color);
+            background-color: #fff;
+            color: #666;
             flex: 1;
-            padding: 8px;
+            padding: 10px;
+            border: 1px solid #eaddd5;
+            border-radius: 6px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            /* Added Shadow */
+            transition: all 0.2s;
+        }
+
+        #mode-selector button:hover {
+            background-color: #f8f9fa;
         }
 
         #mode-selector button.active {
-            background-color: var(--primary-color);
-            color: white;
+            background-color: #FFE3CC;
+            /* Primary mixed with White (~20% tint) */
+            color: #E65100;
+            /* Dark Orange Text */
+            font-weight: bold;
+            border-color: #FFCC80;
+            box-shadow: 0 2px 4px rgba(255, 116, 0, 0.15);
+            /* Orange tinted shadow */
         }
 
         @media (max-width: 800px) {
@@ -323,7 +388,7 @@
         .input-label {
             font-size: 12px;
             font-weight: bold;
-            color: #555;
+            color: #6c757d;
             margin-bottom: 5px;
             display: block;
         }
@@ -418,11 +483,68 @@
 
         /* Highlighting Live Controls Panel */
         .card.highlight-card {
-            background-color: #fffaf5;
+            background-color: #fffaf0;
+            /* Keep warm bg only for highlight card */
             /* Even lighter primary color */
             border: 1px solid #ffe0b2;
             padding: 15px;
             /* Increased padding for emphasis */
+        }
+
+        .card.highlight-card h4 {
+            margin-bottom: 24px;
+            /* Increased from 15px */
+        }
+
+        /* Log Table Styles */
+        .log-container {
+            flex-grow: 1;
+            height: 100%;
+            /* Fill parent height */
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: #fff;
+            margin-bottom: 0;
+            max-height: 400px;
+            /* Limit height to enable scrolling */
+        }
+
+        .log-table {
+            width: 100%;
+            table-layout: fixed;
+            /* Enforce fixed column widths */
+            border-collapse: collapse;
+            font-size: 12px;
+            /* Reduced font size */
+        }
+
+        .log-table th,
+        .log-table td {
+            padding: 6px;
+            /* Reduced padding */
+            text-align: center;
+            border-bottom: 1px solid var(--gray-medium);
+            white-space: nowrap;
+            overflow: hidden;
+            /* Hide overflow */
+            text-overflow: ellipsis;
+            /* Add ellipsis (...) */
+        }
+
+        .log-table th {
+            background-color: var(--gray-light);
+            position: sticky;
+            top: 0;
+            font-weight: bold;
+            color: #555;
+            color: #555;
+            border-bottom: 2px solid var(--gray-medium);
+            z-index: 1;
+        }
+
+        .log-table tr:last-child td {
+            border-bottom: none;
         }
     </style>
 </head>
@@ -441,15 +563,33 @@
         </div>
 
         <!-- 게임 설정 카드 (신규 추가) -->
-        <div class="card" style="margin-bottom: 8px;">
-            <div class="setup-container">
-                <!-- 왼쪽 컬럼: Match ID & Half -->
-                <div class="setup-column">
-                    <div>
-                        <span class="input-label">Match ID</span>
-                        <input type="text" id="match_id" class="setup-input" placeholder="Match ID">
+
+
+        <!-- 실시간 입력 모드 -->
+        <div id="live-mode-container" class="main-container">
+            <!-- 게임 설정 카드 (신규 추가) -->
+            <div class="card" style="margin-bottom: 8px;">
+                <div class="setup-container" style="display: flex; gap: 10px; width: 100%;">
+                    <!-- 1. Home Team -->
+                    <div style="flex: 1;">
+                        <span class="input-label">Home Team</span>
+                        <input type="text" id="teamid_h" class="setup-input" placeholder="Home">
                     </div>
-                    <div>
+
+                    <!-- 2. Away Team -->
+                    <div style="flex: 1;">
+                        <span class="input-label">Away Team</span>
+                        <input type="text" id="teamid_a" class="setup-input" placeholder="Away">
+                    </div>
+
+                    <!-- 3. Match ID -->
+                    <div style="flex: 1;">
+                        <span class="input-label">Match ID</span>
+                        <input type="text" id="match_id" class="setup-input" placeholder="ID">
+                    </div>
+
+                    <!-- 4. Half Toggle -->
+                    <div style="flex: 1;">
                         <span class="input-label">Half</span>
                         <div class="tabs">
                             <input type="radio" id="half_1st" name="half" value="1st" checked>
@@ -460,29 +600,28 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- 오른쪽 컬럼: Home & Away Team -->
-                <div class="setup-column">
-                    <div>
-                        <span class="input-label">Home Team</span>
-                        <input type="text" id="teamid_h" class="setup-input" placeholder="Home Team ID">
-                    </div>
-                    <div>
-                        <span class="input-label">Away Team</span>
-                        <input type="text" id="teamid_a" class="setup-input" placeholder="Away Team ID">
-                    </div>
-                </div>
             </div>
-        </div>
-
-        <!-- 실시간 입력 모드 -->
-        <div id="live-mode-container" class="main-container">
 
             <!-- 상단: 로그 + 축구장 (visual-container) -->
             <div class="visual-container">
                 <div class="card">
                     <h2>기록된 로그</h2>
-                    <textarea id="log_display" rows="12"></textarea>
+                    <div class="log-container">
+                        <table class="log-table" id="log_table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 12%;">Time</th>
+                                    <th style="width: 12%;">Team</th>
+                                    <th style="width: 12%;">Player</th>
+                                    <th style="width: 34%;">Action</th>
+                                    <th style="width: 30%;">Pos</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Logs will be added here -->
+                            </tbody>
+                        </table>
+                    </div>
                     <div class="button-group">
                         <button id="export_logs">분석 및 내보내기</button>
                         <button id="delete_last">마지막 로그 삭제</button>
@@ -531,11 +670,11 @@
                             <p class="control-label">Game Time</p>
                             <div style="display: flex; gap: 5px; align-items: center; width: 100%;">
                                 <button id="time_minus"
-                                    style="width: 40px; height: 36px; flex: none; background-color: #6c757d; padding: 0;">-1</button>
+                                    style="width: 40px; height: 36px; flex: none; padding: 0; color: #555; background-color: rgba(255, 116, 0, 0.1);">-1</button>
                                 <input type="text" id="timeline" value="00:00"
                                     style="flex: 1; height: 36px; text-align: center; font-weight: bold; font-size: 16px;">
                                 <button id="time_plus"
-                                    style="width: 40px; height: 36px; flex: none; background-color: #6c757d; padding: 0;">+1</button>
+                                    style="width: 40px; height: 36px; flex: none; padding: 0; color: #555; background-color: rgba(255, 116, 0, 0.1);">+1</button>
                             </div>
                         </div>
 
@@ -579,7 +718,7 @@
 
         const fieldWrapper = document.getElementById('field-wrapper');
         const fieldImage = document.getElementById('field-image');
-        const logDisplay = document.getElementById('log_display');
+        const logTableBody = document.querySelector('#log_table tbody'); // Changed from textarea
 
         // 모드 전환 로직
         const liveModeContainer = document.getElementById('live-mode-container');
@@ -760,7 +899,23 @@
 
             if (response.ok) {
                 logs.push(data.log_text);
-                logDisplay.value = logs.join('\n');
+
+                // Add row to table
+                const row = document.createElement('tr');
+                const logData = data.log_data;
+                row.innerHTML = `
+                    <td>${logData.Time}</td>
+                    <td>${logData.Team}</td>
+                    <td>${logData.Player}</td>
+                    <td>${logData.Action}</td>
+                    <td>${logData.Coord}</td>
+                `;
+                logTableBody.appendChild(row);
+
+                // Auto scroll to bottom
+                const logContainer = document.querySelector('.log-container');
+                logContainer.scrollTop = logContainer.scrollHeight;
+
                 clearDots();
                 document.getElementById('stat_input').value = '';
             } else {
@@ -771,7 +926,10 @@
         document.getElementById('delete_last').addEventListener('click', () => {
             if (logs.length > 0) {
                 logs.pop();
-                logDisplay.value = logs.join('\n');
+                // Remove last row
+                if (logTableBody.lastElementChild) {
+                    logTableBody.removeChild(logTableBody.lastElementChild);
+                }
             }
         });
 
