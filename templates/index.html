@@ -28,7 +28,8 @@
         .card {
             background: var(--card-bg);
             border-radius: 6px;
-            padding: 15px;
+            padding: 10px;
+            /* Reduced from 15px */
             box-shadow: var(--shadow);
             border: 1px solid var(--border-color);
         }
@@ -39,7 +40,8 @@
             width: 100%;
             max-width: 1600px;
             margin: auto;
-            gap: 15px;
+            gap: 8px;
+            /* Reduced from 15px */
             align-items: stretch;
         }
 
@@ -92,7 +94,7 @@
         }
 
         h2 {
-            font-size: 20px;
+            font-size: 16px;
             color: var(--primary-color);
         }
 
@@ -100,8 +102,6 @@
             font-size: 16px;
             color: var(--primary-color);
             margin-top: 0;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 8px;
             margin-bottom: 15px;
         }
 
@@ -128,6 +128,12 @@
             border-color: var(--primary-color);
         }
 
+        #stat_input {
+            height: 36px;
+            border: 2px solid var(--primary-color);
+            font-weight: bold;
+        }
+
         /* 탭 스타일 */
         .radio-row {
             display: flex;
@@ -149,12 +155,13 @@
             display: flex;
             position: relative;
             background-color: #fff;
-            background-color: #fff;
             box-shadow: 0 1px 3px 0 rgba(255, 116, 0, 0.1);
-            padding: 0.25rem;
-            /* 패딩 약간 조정 */
+            padding: 2px;
+            /* Reduced specific padding */
             border-radius: 12px;
-            width: fit-content;
+            width: 100%;
+            /* Full width */
+            box-sizing: border-box;
         }
 
         .tabs * {
@@ -169,8 +176,13 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            height: 30px;
-            width: 50px;
+            height: 32px;
+            /* 36px total - 4px padding = 32px inner */
+            /* Reduced from 36px */
+            width: auto;
+            /* Allow flex to control width */
+            flex: 1;
+            /* Distribute space evenly */
             font-size: .8rem;
             color: black;
             font-weight: 500;
@@ -178,6 +190,7 @@
             cursor: pointer;
             transition: color 0.15s ease-in;
             margin: 0;
+            z-index: 2;
         }
 
         .tabs input[type="radio"]:checked+label {
@@ -187,8 +200,11 @@
         .glider {
             position: absolute;
             display: flex;
-            height: 30px;
-            width: 50px;
+            height: 32px;
+            /* Match tab height */
+            /* Reduced from 36px */
+            width: 50%;
+            /* Half of the container */
             background-color: #fff0e6;
             z-index: 1;
             border-radius: 12px;
@@ -219,8 +235,25 @@
             height: 10px;
             background-color: #FF7740;
             border-radius: 50%;
-            transform: translate(-50%, -50%);
             border: 1.5px solid white;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes popIn {
+            0% {
+                transform: translate(-50%, -50%) scale(0);
+                opacity: 0;
+            }
+
+            70% {
+                transform: translate(-50%, -50%) scale(1.5);
+                opacity: 0.8;
+            }
+
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
         }
 
         button {
@@ -265,13 +298,138 @@
             .controls-container {
                 width: 100%;
             }
+
+            .setup-container {
+                flex-direction: column;
+                align-items: center;
+                gap: 15px;
+            }
+        }
+
+        .setup-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .setup-column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            /* Reduced from 15px */
+        }
+
+        .input-label {
+            font-size: 12px;
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .setup-input {
+            width: 100%;
+            height: 36px;
+            /* Reduced to match tab height */
+            /* Match height of tabs roughly (36px + padding) */
+            padding: 0 12px;
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        .setup-input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+
+        .team-input:focus {
+            border-color: var(--primary-color);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            align-items: center;
+        }
+
+        .icon-btn {
+            width: 36px;
+            /* Reduced from 40px */
+            height: 36px;
+            /* Reduced from 40px */
+            /* Match input height roughly */
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+
+        .live-controls_grid {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            /* Bottom align controls */
+            justify-content: center;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            /* Stretch children to fill width */
+            gap: 5px;
+            flex: 1;
+            /* Grow to fill space */
+            min-width: 200px;
+            /* Minimum width before wrapping */
+        }
+
+        .control-label {
+            font-size: 12px;
+            font-weight: bold;
+            margin: 0 0 5px 0;
+            color: #555;
+            display: block;
+            text-align: center;
+        }
+
+        /* Setup Card Specific overrides for compactness */
+        .setup-container .setup-input,
+        .setup-container .tab,
+        .setup-container .glider {
+            height: 30px !important;
+            /* Force smaller height */
+            min-height: 0;
+        }
+
+        .setup-container .tabs {
+            min-height: 0;
+        }
+
+        /* Highlighting Live Controls Panel */
+        .card.highlight-card {
+            background-color: #fffaf5;
+            /* Even lighter primary color */
+            border: 1px solid #ffe0b2;
+            padding: 15px;
+            /* Increased padding for emphasis */
         }
     </style>
 </head>
 
 <body>
     <div style="width: 100%; max-width: 1000px; margin: 0 auto;">
-        <div class="card" style="margin-bottom: 20px;">
+        <div class="card" style="margin-bottom: 8px;">
             <div style="display: flex; margin-bottom: 8px;">
                 <img id="logo" src="/static/assets/logo.png" alt="logo" style="width: 200px;">
             </div>
@@ -279,6 +437,41 @@
                 <button id="btn-live-mode">⚽ 실시간 입력</button>
                 <button id="btn-upload-mode">📄 파일 업로드</button>
                 <button id="btn-manual-mode">📘 사용 설명서</button>
+            </div>
+        </div>
+
+        <!-- 게임 설정 카드 (신규 추가) -->
+        <div class="card" style="margin-bottom: 8px;">
+            <div class="setup-container">
+                <!-- 왼쪽 컬럼: Match ID & Half -->
+                <div class="setup-column">
+                    <div>
+                        <span class="input-label">Match ID</span>
+                        <input type="text" id="match_id" class="setup-input" placeholder="Match ID">
+                    </div>
+                    <div>
+                        <span class="input-label">Half</span>
+                        <div class="tabs">
+                            <input type="radio" id="half_1st" name="half" value="1st" checked>
+                            <label class="tab" for="half_1st">1st</label>
+                            <input type="radio" id="half_2nd" name="half" value="2nd">
+                            <label class="tab" for="half_2nd">2nd</label>
+                            <span class="glider"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 오른쪽 컬럼: Home & Away Team -->
+                <div class="setup-column">
+                    <div>
+                        <span class="input-label">Home Team</span>
+                        <input type="text" id="teamid_h" class="setup-input" placeholder="Home Team ID">
+                    </div>
+                    <div>
+                        <span class="input-label">Away Team</span>
+                        <input type="text" id="teamid_a" class="setup-input" placeholder="Away Team ID">
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -303,28 +496,15 @@
                 </div>
             </div>
 
-            <!-- 하단: 입력 컨트롤 (controls-container) -->
+            <!-- 하단: 통합된 입력 컨트롤 (controls-container 수정) -->
             <div class="controls-container">
-                <div class="card">
-                    <h4>경기 정보</h4>
-                    <div class="input-grid">
-                        <input type="text" id="teamid_h" placeholder="Home Team ID">
-                        <input type="text" id="match_id" placeholder="Match ID">
-                        <input type="text" id="teamid_a" placeholder="Away Team ID">
-                    </div>
-                    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-                        <div class="radio-row" style="margin-top: 15px;">
-                            <p>Half:</p>
-                            <div class="tabs">
-                                <input type="radio" id="half_1st" name="half" value="1st" checked>
-                                <label class="tab" for="half_1st">1st</label>
-                                <input type="radio" id="half_2nd" name="half" value="2nd">
-                                <label class="tab" for="half_2nd">2nd</label>
-                                <span class="glider"></span>
-                            </div>
-                        </div>
-                        <div class="radio-row" style="margin-top: 15px;">
-                            <p>Direction:</p>
+                <div class="card highlight-card">
+                    <h4>실시간 입력 (Live Controls)</h4>
+                    <div class="live-controls_grid">
+
+                        <!-- 1. Direction Toggle -->
+                        <div class="control-group" style="flex: 0.7; min-width: 150px;">
+                            <p class="control-label">Direction</p>
                             <div class="tabs">
                                 <input type="radio" id="dir_right" name="direction" value="right" checked>
                                 <label class="tab" for="dir_right">Right</label>
@@ -333,8 +513,10 @@
                                 <span class="glider"></span>
                             </div>
                         </div>
-                        <div class="radio-row" style="margin-top: 15px;">
-                            <p>Team:</p>
+
+                        <!-- 2. Team Toggle -->
+                        <div class="control-group" style="flex: 0.7; min-width: 150px;">
+                            <p class="control-label">Team</p>
                             <div class="tabs">
                                 <input type="radio" id="team_home" name="team" value="home" checked>
                                 <label class="tab" for="team_home">Home</label>
@@ -343,19 +525,31 @@
                                 <span class="glider"></span>
                             </div>
                         </div>
+
+                        <!-- 3. Time Control -->
+                        <div class="control-group" style="flex: 1;">
+                            <p class="control-label">Game Time</p>
+                            <div style="display: flex; gap: 5px; align-items: center; width: 100%;">
+                                <button id="time_minus"
+                                    style="width: 40px; height: 36px; flex: none; background-color: #6c757d; padding: 0;">-1</button>
+                                <input type="text" id="timeline" value="00:00"
+                                    style="flex: 1; height: 36px; text-align: center; font-weight: bold; font-size: 16px;">
+                                <button id="time_plus"
+                                    style="width: 40px; height: 36px; flex: none; background-color: #6c757d; padding: 0;">+1</button>
+                            </div>
+                        </div>
+
+                        <!-- 4. Stat Input & Button -->
+                        <div class="control-group" style="flex: 2; min-width: 250px;">
+                            <p class="control-label">Stat Input</p>
+                            <div class="input-group">
+                                <input type="text" id="stat_input" class="setup-input" placeholder="스탯 코드 (예: 10ss8.k)">
+                                <!-- Restored Placeholder -->
+                                <button id="submit_stat" class="icon-btn" style="width: 72px;">↵</button>
+                            </div>
+                        </div>
+
                     </div>
-                </div>
-                <div class="card">
-                    <h4>시간 및 스탯</h4>
-                    <label style="margin-bottom: 5px; display: block; font-weight: bold;">경기 시간 (↑↓ 키로 조정)</label>
-                    <div style="display: flex; gap: 5px; align-items: center; margin-bottom: 10px;">
-                        <button id="time_minus" style="width: 50px; background-color: #6c757d;">-1분</button>
-                        <input type="text" id="timeline" value="00:00"
-                            style="flex: 1; text-align: center; font-weight: bold; font-size: 16px;">
-                        <button id="time_plus" style="width: 50px; background-color: #6c757d;">+1분</button>
-                    </div>
-                    <input type="text" id="stat_input" placeholder="스탯 코드 (예: 10ss8.k)" style="margin-bottom: 12px;">
-                    <button id="submit_stat">스탯 기록</button>
                 </div>
             </div>
         </div>
@@ -422,6 +616,21 @@
         btnLiveMode.addEventListener('click', () => setMode('live'));
         btnUploadMode.addEventListener('click', () => setMode('upload'));
         btnManualMode.addEventListener('click', () => setMode('manual'));
+
+        btnManualMode.addEventListener('click', () => setMode('manual'));
+
+        // 팀 변경 시 방향 자동 전환 로직
+        const teamRadios = document.querySelectorAll('input[name="team"]');
+        teamRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                const currentDir = document.querySelector('input[name="direction"]:checked').value;
+                const newDir = currentDir === 'right' ? 'left' : 'right';
+                const dirRadio = document.querySelector(`input[name="direction"][value="${newDir}"]`);
+                if (dirRadio) {
+                    dirRadio.checked = true;
+                }
+            });
+        });
 
         // 초기 모드 설정
         setMode('live');
