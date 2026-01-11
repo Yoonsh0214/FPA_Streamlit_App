@@ -307,7 +307,7 @@ def calculate_shooting_score(df_shooter_summary):
     
     mid_point = 10
     steepness = 0.18
-    shooting_scores = 100 / (1 + np.exp(-steepness * (summary['Raw_Shooting_Score'] - mid_point)))
+    shooting_scores = 100 / (1 + np.exp(-steepness * (summary['Shooting_Raw'] - mid_point)))
     summary['Shooting_Score'] = shooting_scores.round(0).astype(int)
     return summary
 
