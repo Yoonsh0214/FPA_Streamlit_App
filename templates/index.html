@@ -999,6 +999,14 @@
                 alert(`오류 발생: ${error.error}`);
             }
         });
+
+        // 엔터키 입력 시 데이터 제출
+        document.getElementById('stat_input').addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                document.getElementById('submit_stat').click();
+            }
+        });
     </script>
 </body>
 
