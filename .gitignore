@@ -9,3 +9,7 @@ __pycache__/
 
 # OS generated files
 .DS_Store
+
+# AI and Project Config
+.cursor/
+.taskmaster/

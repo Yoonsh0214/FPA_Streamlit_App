@@ -138,11 +138,8 @@ def export_data():
     try:
         df = parse_logs_to_dataframe(logs, match_id, teamid_h, teamid_a)
         
-        # --- analysis.py의 전체 분석 파이프라인 실행 ---
-        df_with_seconds = analysis.convert_time_to_seconds(df.copy())
-        df_tagged = analysis.auto_tag_key_pass_and_assist(df_with_seconds)
-        df_analyzed = analysis.analyze_pass_data(df_tagged)
-        df_analyzed_with_xg = analysis.add_xg_to_data(df_analyzed)
+        # --- analysis.py의 통합 분석 파이프라인 실행 ---
+        df_analyzed_with_xg = analysis.perform_full_analysis(df)
 
         # --- 메모리 내에서 엑셀 파일 생성 ---
         output = io.BytesIO()
@@ -196,11 +193,8 @@ def upload_and_analyze():
         try:
             df = pd.read_excel(file, sheet_name='Data')
             
-            # --- analysis.py의 전체 분석 파이프라인 실행 ---
-            df_with_seconds = analysis.convert_time_to_seconds(df.copy())
-            df_tagged = analysis.auto_tag_key_pass_and_assist(df_with_seconds)
-            df_analyzed = analysis.analyze_pass_data(df_tagged)
-            df_analyzed_with_xg = analysis.add_xg_to_data(df_analyzed)
+            # --- analysis.py의 통합 분석 파이프라인 실행 ---
+            df_analyzed_with_xg = analysis.perform_full_analysis(df)
 
             # --- 메모리 내에서 엑셀 파일 생성 ---
             output = io.BytesIO()
