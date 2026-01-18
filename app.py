@@ -8,7 +8,7 @@ import analysis
 app = Flask(__name__, static_url_path='/static')
 
 # --- 상수 (기존 ui.py에서 가져옴) ---
-ACTION_CODES = { 'ddd': 'Goal', 'dd': 'Shot On Target', 'd': 'Shot', 'db': 'Blocked Shot', 'zz': 'Assist', 'z': 'Key Pass', 'cc': 'Cross', 'c': 'Cross', 'ss': 'Pass', 's': 'Pass', 'ee': 'Breakthrough', 'rr': 'Dribble', 'gp': 'Gain', 'm': 'Miss', 'aa': 'Tackle', 'q': 'Intercept', 'qq': 'Acquisition', 'w': 'Clear', 'ww': 'Cutout', 'qw': 'Block', 'v': 'Catching', 'vv': 'Punching', 'bb': 'Duel', 'b': 'Duel', 'f': 'Foul', 'ff': 'Be Fouled', 'o': 'Offside' }
+ACTION_CODES = { 'ddd': 'Goal', 'dd': 'Shot On Target', 'd': 'Shot', 'db': 'Blocked Shot', 'zz': 'Assist', 'z': 'Key Pass', 'cc': 'Cross', 'c': 'Cross', 'ss': 'Pass', 's': 'Pass', 'ee': 'Breakthrough', 'rr': 'Dribble', 'gp': 'Gain', 'm': 'Miss', 'aa': 'Tackle', 'q': 'Intercept', 'qq': 'Acquisition', 'w': 'Clear', 'ww': 'Cutout', 'qw': 'Block', 'v': 'Catching', 'vv': 'Punching', 'bb': 'Duel', 'b': 'Duel', 'f': 'Foul', 'ff': 'Be Fouled', 'o': 'Offside', 't': 'Touch' }
 TAG_CODES = { 'k': 'Key', 'a': 'Assist', 'h': 'Header', 'r': 'Aerial', 'w': 'Suffered', 'n': 'In-box', 'u': 'Out-box', 'p': 'Progressive', 'c': 'Counter Attack', 'sw': 'Switch', 'wf': 'Weak Foot', 'ft': 'First Time' }
 TWO_DOT_ACTION_CODES = {'s', 'c', 'r', 'e'}
 
