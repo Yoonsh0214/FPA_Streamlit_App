@@ -695,12 +695,57 @@
 
         <!-- 파일 업로드 모드 -->
         <div id="upload-mode-container" class="card" style="display: none;">
-            <h2>파일 업로드하여 분석</h2>
-            <p>'Data' 시트가 포함된 .xlsx 파일을 업로드하세요.</p>
-            <form id="upload-form">
-                <input type="file" name="file" id="file-input" accept=".xlsx" required>
-                <button type="submit">파일 분석 및 다운로드</button>
-            </form>
+            <h2>파일 업로드 및 분석</h2>
+
+            <div class="tabs" style="margin-bottom: 20px; max-width: 400px;">
+                <input type="radio" id="tab_excel" name="upload_tab" checked>
+                <label class="tab" for="tab_excel">엑셀 다운로드</label>
+                <input type="radio" id="tab_vis" name="upload_tab">
+                <label class="tab" for="tab_vis">선수 시각화</label>
+                <span class="glider"></span>
+            </div>
+
+            <!-- 1. 엑셀 다운로드 섹션 -->
+            <div id="excel-section">
+                <p>'Data' 시트가 포함된 .xlsx 파일을 업로드하면 분석된 엑셀 파일을 다운로드합니다.</p>
+                <form id="upload-form">
+                    <input type="file" name="file" id="file-input" accept=".xlsx" required style="margin-bottom: 10px;">
+                    <button type="submit">파일 분석 및 다운로드</button>
+                </form>
+            </div>
+
+            <!-- 2. 시각화 섹션 -->
+            <div id="visual-section" style="display: none;">
+                <p>파일을 업로드하고 선수를 선택하면 패스맵과 히트맵을 보여줍니다.</p>
+
+                <div style="margin-bottom: 15px;">
+                    <label class="input-label">1. 파일 선택</label>
+                    <input type="file" id="vis-file-input" accept=".xlsx" style="margin-bottom: 10px;">
+                    <button id="btn-load-players" style="background-color: #f0f0f0;">선수 목록 불러오기</button>
+                </div>
+
+                <div id="player-select-area" style="display: none; margin-bottom: 15px;">
+                    <label class="input-label">2. 선수 선택</label>
+                    <select id="player-select"
+                        style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid var(--border-color); margin-bottom: 10px;">
+                        <!-- Options populated by JS -->
+                    </select>
+                    <button id="btn-visualize" style="background-color: var(--primary-color); color: white;">시각화
+                        보기</button>
+                </div>
+
+                <div id="vis-results"
+                    style="display: none; display: flex; flex-direction: column; gap: 20px; margin-top: 20px;">
+                    <div>
+                        <h4>패스 맵 (Pass Map)</h4>
+                        <img id="img-pass-map" style="width: 100%; border-radius: 8px; border: 1px solid #ddd;">
+                    </div>
+                    <div>
+                        <h4>히트맵 (Heatmap)</h4>
+                        <img id="img-heatmap" style="width: 100%; border-radius: 8px; border: 1px solid #ddd;">
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- 사용 설명서 모드 -->
@@ -1005,6 +1050,123 @@
             if (event.key === 'Enter') {
                 event.preventDefault();
                 document.getElementById('submit_stat').click();
+            }
+        });
+
+        // [신규] 파일 업로드 모드 탭 전환 로직
+        const tabExcel = document.getElementById('tab_excel');
+        const tabVis = document.getElementById('tab_vis');
+        const excelSection = document.getElementById('excel-section');
+        const visualSection = document.getElementById('visual-section');
+
+        tabExcel.addEventListener('change', () => {
+            if (tabExcel.checked) {
+                excelSection.style.display = 'block';
+                visualSection.style.display = 'none';
+            }
+        });
+
+        tabVis.addEventListener('change', () => {
+            if (tabVis.checked) {
+                excelSection.style.display = 'none';
+                visualSection.style.display = 'block';
+            }
+        });
+
+        // [신규] 선수 목록 불러오기
+        document.getElementById('btn-load-players').addEventListener('click', async () => {
+            const fileInput = document.getElementById('vis-file-input');
+            if (fileInput.files.length === 0) {
+                alert('파일을 먼저 선택해주세요.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            const btn = document.getElementById('btn-load-players');
+            const originalText = btn.innerText;
+            btn.innerText = '로딩 중...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/get_player_list', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    const select = document.getElementById('player-select');
+                    select.innerHTML = '';
+                    data.players.forEach(player => {
+                        const option = document.createElement('option');
+                        option.value = player;
+                        option.text = player; // 이름 편집 기능이 없으므로 ID 그대로 표출 (필요시 수정 가능)
+                        select.appendChild(option);
+                    });
+
+                    document.getElementById('player-select-area').style.display = 'block';
+                } else {
+                    alert(`오류: ${data.error}`);
+                }
+            } catch (err) {
+                alert(`통신 오류: ${err}`);
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        });
+
+        // [신규] 시각화 보기
+        document.getElementById('btn-visualize').addEventListener('click', async () => {
+            const fileInput = document.getElementById('vis-file-input');
+            const playerSelect = document.getElementById('player-select');
+
+            if (fileInput.files.length === 0) {
+                alert('파일 선택이 필요합니다.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('player_id', playerSelect.value);
+
+            const btn = document.getElementById('btn-visualize');
+            const originalText = btn.innerText;
+            btn.innerText = '분석 및 생성 중...';
+            btn.disabled = true;
+            document.getElementById('vis-results').style.display = 'none';
+
+            try {
+                const response = await fetch('/upload_analyze_visualize', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    const passMapImg = document.getElementById('img-pass-map');
+                    const heatmapImg = document.getElementById('img-heatmap');
+
+                    if (data.pass_map) {
+                        passMapImg.src = 'data:image/png;base64,' + data.pass_map;
+                    }
+                    if (data.heatmap) {
+                        heatmapImg.src = 'data:image/png;base64,' + data.heatmap;
+                    }
+
+                    document.getElementById('vis-results').style.display = 'flex';
+                } else {
+                    alert(`오류: ${data.error}`);
+                }
+            } catch (err) {
+                alert(`통신 오류: ${err}`);
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
             }
         });
     </script>
