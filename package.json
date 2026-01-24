@@ -1,0 +1,10 @@
+{
+    "name": "fpa-webapp",
+    "version": "1.0.0",
+    "description": "Football Performance Analysis Web App",
+    "scripts": {
+        "dev": "python3 app.py",
+        "start": "gunicorn app:app",
+        "install-deps": "pip install -r requirements.txt"
+    }
+}
