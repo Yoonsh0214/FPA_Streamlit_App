@@ -577,28 +577,20 @@
         }
 
         .log-table {
-            width: 100%;
-            min-width: 600px;
-            /* Force scroll on small screens */
-            table-layout: fixed;
-            /* Enforce fixed column widths */
+            width: max-content;
+            min-width: 100%;
             border-collapse: collapse;
             font-size: 12px;
-            /* Reduced font size */
         }
 
         .log-table th,
         .log-table td {
-            padding: 6px;
-            /* Reduced padding */
+            padding: 6px 10px;
             text-align: center;
             border-bottom: 1px solid var(--gray-medium);
             white-space: nowrap;
-            overflow: hidden;
-            /* Hide overflow */
-            text-overflow: ellipsis;
-            /* Add ellipsis (...) */
         }
+
 
         .log-table th {
             background-color: var(--gray-light);
