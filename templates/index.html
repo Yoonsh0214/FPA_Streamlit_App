@@ -566,6 +566,8 @@
             height: 100%;
             /* Fill parent height */
             overflow-y: auto;
+            overflow-x: auto;
+            /* Enable horizontal scroll */
             border: 1px solid var(--border-color);
             border-radius: 4px;
             background: #fff;
@@ -576,6 +578,8 @@
 
         .log-table {
             width: 100%;
+            min-width: 600px;
+            /* Force scroll on small screens */
             table-layout: fixed;
             /* Enforce fixed column widths */
             border-collapse: collapse;

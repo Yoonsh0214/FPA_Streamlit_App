@@ -116,10 +116,16 @@ def generate_log():
         base_action_part = parts[0]
         tag_codes = parts[1].split('.') if len(parts) > 1 else []
 
-        match = re.match(r"(\d+)([a-z]+)(\d*)", base_action_part)
-        if not match: raise ValueError("기본 입력 형식 오류")
+        # [수정] 숫자만 입력된 경우 'Touch'로 간주
+        if base_action_part.isdigit():
+            player_from = base_action_part
+            action_code_raw = 't'
+            player_to = ''
+        else:
+            match = re.match(r"(\d+)([a-z]+)(\d*)", base_action_part)
+            if not match: raise ValueError("기본 입력 형식 오류")
 
-        player_from, action_code_raw, player_to = match.groups()
+            player_from, action_code_raw, player_to = match.groups()
         player_to = player_to if player_to else ''
         
         base_action_code = action_code_raw[0]
