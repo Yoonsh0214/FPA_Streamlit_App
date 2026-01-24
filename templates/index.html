@@ -613,7 +613,7 @@
     <div style="width: 100%; max-width: 1000px; margin: 0 auto;">
         <div class="card" style="margin-bottom: 8px;">
             <div style="display: flex; margin-bottom: 8px;">
-                <img id="logo" src="/static/assets/logo.png" alt="logo" style="width: 120px;">
+                <img id="logo" src="/static/assets/logo.png" alt="logo" style="height: 25px; width: auto;">
             </div>
             <div id="mode-selector" class="tabs-3">
                 <input type="radio" id="mode_live" name="app_mode" value="live" checked>
@@ -681,7 +681,9 @@
                                     <th>Team</th>
                                     <th>Player</th>
                                     <th>Action</th>
+                                    <th>Receiver</th>
                                     <th>Pos</th>
+                                    <th>Tags</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -1015,7 +1017,9 @@
                     <td>${logData.Team}</td>
                     <td>${logData.Player}</td>
                     <td>${logData.Action}</td>
+                    <td>${logData.Receiver}</td>
                     <td>${logData.Coord}</td>
+                    <td>${logData.Tags}</td>
                 `;
                 logTableBody.appendChild(row);
 

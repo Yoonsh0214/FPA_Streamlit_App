@@ -183,7 +183,9 @@ def generate_log():
             "Team": team,
             "Player": player_from,
             "Action": action_name,
-            "Coord": coord_str
+            "Receiver": player_to,
+            "Coord": coord_str,
+            "Tags": ', '.join(sorted(list(set(tags_list)))) if tags_list else ''
         }
 
         return jsonify({"log_text": log_text, "log_data": log_data})
