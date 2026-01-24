@@ -2,3 +2,7 @@ flask
 pandas
 openpyxl
 gunicorn
+
+streamlit
+mplsoccer
+matplotlib

@@ -4,6 +4,67 @@ import re
 import pandas as pd
 from flask import Flask, request, send_file, render_template, jsonify
 import analysis
+import matplotlib
+matplotlib.use('Agg') # Flask 서버 환경에서 GUI 백엔드 사용 방지
+import matplotlib.pyplot as plt
+from mplsoccer import Pitch
+import base64
+
+def fig_to_base64(fig):
+    img = io.BytesIO()
+    fig.savefig(img, format='png', bbox_inches='tight')
+    img.seek(0)
+    return base64.b64encode(img.getvalue()).decode('utf-8')
+
+def draw_pass_map_flask(df, p_id):
+    pitch = Pitch(pitch_type='custom', pitch_length=105, pitch_width=68, pitch_color='grass', line_color='white', stripe=True)
+    fig, ax = pitch.draw(figsize=(10, 8))
+    
+    # 데이터 타입 통일
+    df['Player'] = df['Player'].astype(str).str.replace('.0', '', regex=False)
+    p_id = str(p_id).replace('.0', '')
+
+    plot_df = df[(df['Player'] == p_id) & (df['Action'].str.contains('Pass', case=False, na=False))]
+    
+    req_cols = ['StartX_adj', 'StartY_adj', 'EndX_adj', 'EndY_adj']
+    # 분석 데이터 없으면 분석 수행 (방어 로직)
+    if not all(col in df.columns for col in req_cols):
+         # 여기서는 이미 분석된 데이터가 들어온다고 가정하지만, 혹시 모르니 체크
+         return None
+
+    plot_df = plot_df.dropna(subset=req_cols)
+    
+    for _, row in plot_df.iterrows():
+        tags = str(row['Tags']) if pd.notna(row['Tags']) else ''
+        color = '#0dff00' if 'Success' in tags else 'red'
+        pitch.arrows(row['StartX_adj'], row['StartY_adj'], row['EndX_adj'], row['EndY_adj'], 
+                     color=color, ax=ax, width=2, zorder=2)
+    
+    ax.set_title(f"Player {p_id} | Pass Map", fontsize=20, fontweight='bold', pad=15)
+    base64_img = fig_to_base64(fig)
+    plt.close(fig)
+    return base64_img
+
+def draw_heatmap_flask(df, p_id):
+    pitch = Pitch(pitch_type='custom', pitch_length=105, pitch_width=68, pitch_color='grass', line_color='white')
+    fig, ax = pitch.draw(figsize=(10, 8))
+    
+    # 데이터 타입 통일
+    df['Player'] = df['Player'].astype(str).str.replace('.0', '', regex=False)
+    p_id = str(p_id).replace('.0', '')
+
+    if 'StartX_adj' in df.columns and 'StartY_adj' in df.columns:
+        plot_df = df[df['Player'] == p_id].dropna(subset=['StartX_adj', 'StartY_adj'])
+        
+        if not plot_df.empty:
+            pitch.kdeplot(x=plot_df['StartX_adj'], y=plot_df['StartY_adj'], ax=ax, fill=True, levels=100, thresh=0.05, cmap='hot', alpha=0.6)
+        else:
+            ax.text(52.5, 34, "No Data", ha='center', va='center', fontsize=20, color='black')
+            
+    ax.set_title(f"Player {p_id} | Heatmap", fontsize=20, fontweight='bold', pad=15)
+    base64_img = fig_to_base64(fig)
+    plt.close(fig)
+    return base64_img
 
 app = Flask(__name__, static_url_path='/static')
 
@@ -237,6 +298,48 @@ def upload_and_analyze():
             return jsonify({"error": str(e)}), 500
     
     return jsonify({"error": "Invalid file type"}), 400
+
+
+# [신규 기능] 1. 선수 목록 가져오기
+@app.route('/get_player_list', methods=['POST'])
+def get_player_list():
+    if 'file' not in request.files: return jsonify({"error": "파일 없음"}), 400
+    file = request.files['file']
+    try:
+        df = pd.read_excel(file, sheet_name=0)
+        if 'Player' not in df.columns: return jsonify({"error": "Player 컬럼 없음"}), 400
+        players = sorted(df['Player'].dropna().astype(str).unique(), key=lambda x: float(x) if x.replace('.','',1).isdigit() else 999)
+        return jsonify({"players": players})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# [신규 기능] 2. 분석 및 시각화
+@app.route('/upload_analyze_visualize', methods=['POST'])
+def upload_analyze_visualize():
+    if 'file' not in request.files: return jsonify({"error": "파일 없음"}), 400
+    file = request.files['file']
+    player_id = request.form.get('player_id', '')
+
+    try:
+        df = pd.read_excel(file, sheet_name=0)
+        
+        # 분석 파이프라인 (필요시)
+        required_cols = ['StartX_adj', 'StartY_adj', 'EndX_adj', 'EndY_adj']
+        if not all(col in df.columns for col in required_cols):
+             df = analysis.perform_full_analysis(df)
+        
+        # 시각화 이미지만 생성
+        pass_map = draw_pass_map_flask(df.copy(), player_id)
+        heatmap = draw_heatmap_flask(df.copy(), player_id)
+        
+        return jsonify({
+            "pass_map": pass_map,
+            "heatmap": heatmap
+        })
+
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001)
