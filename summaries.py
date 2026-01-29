@@ -13,7 +13,8 @@ def create_player_summary(df_analyzed):
     
     required_cols = [
         'Total_Pass', 'Success_Pass', 'Key_Pass', 'Assist', 'Fail_Pass', 'Pass_Success_Rate',
-        'Progressive_Pass_Success', 'Final_Third_Pass_Success', 'PA_Pass_Success'
+        'Progressive_Pass_Success', 'Final_Third_Pass_Success', 'PA_Pass_Success',
+        'Own_Half_Pass_Score', 'Own_Half_Pass_Fail'
     ] + ALL_DIRECTIONS + ALL_DISTANCES
 
     # 기본 프레임 생성
@@ -56,6 +57,18 @@ def create_player_summary(df_analyzed):
         summary['Progressive_Pass_Success'] = df_pass_success[is_progressive_pass(df_pass_success['StartX_adj'], df_pass_success['EndX_adj'])].groupby('Player')['Action'].count().reindex(all_players).fillna(0)
         summary['Final_Third_Pass_Success'] = df_pass_success[is_in_final_third(df_pass_success['StartX_adj'])].groupby('Player')['Action'].count().reindex(all_players).fillna(0)
         summary['PA_Pass_Success'] = df_pass_success[is_in_penalty_area(df_pass_success['EndX_adj'], df_pass_success['EndY_adj'])].groupby('Player')['Action'].count().reindex(all_players).fillna(0)
+        
+        # BLD Score Logic: Own Half Passes
+        df_own_half = df_pass_success[df_pass_success['StartX_adj'] <= 52.5].copy()
+        if not df_own_half.empty:
+            df_own_half['x_gain'] = df_own_half['EndX_adj'] - df_own_half['StartX_adj']
+            # Base Score 0.5 + Bonus (x_gain * 0.1 if x_gain >= 5)
+            df_own_half['Score'] = 0.5 + np.where(df_own_half['x_gain'] >= 5, df_own_half['x_gain'] * 0.1, 0)
+            summary['Own_Half_Pass_Score'] = df_own_half.groupby('Player')['Score'].sum().reindex(all_players).fillna(0)
+
+    # BLD Fail Logic
+    df_pass_fail_own = df_pass[(~df_pass['Tags'].str.contains('Success')) & (df_pass['StartX_adj'] <= 52.5)]
+    summary['Own_Half_Pass_Fail'] = df_pass_fail_own.groupby('Player')['Action'].count().reindex(all_players).fillna(0)
 
     # 정수형 변환 (Rate 제외)
     int_cols = [col for col in required_cols if 'Rate' not in col]
@@ -69,7 +82,8 @@ def create_shooter_summary(df_with_xg):
     
     required_cols = [
         'Total_Shots', 'Shots_On_Target', 'Goals', 'Total_xG',
-        'Headed_Goals', 'Outbox_Goals', 'Counter_Attack_Goals'
+        'Headed_Goals', 'Outbox_Goals', 'Counter_Attack_Goals',
+        'Catch_Count', 'Total_SOT_xG_Conceded', 'Goals_Conceded'
     ]
     summary = pd.DataFrame(index=all_players)
     for col in required_cols: summary[col] = 0.0
@@ -96,6 +110,34 @@ def create_shooter_summary(df_with_xg):
         summary['Headed_Goals'] = df_goals[df_goals['Tags'].str.contains('Header')].groupby('Player')['Action'].count().reindex(all_players).fillna(0)
         summary['Outbox_Goals'] = df_goals[df_goals['Tags'].str.contains('Out-box')].groupby('Player')['Action'].count().reindex(all_players).fillna(0)
         summary['Counter_Attack_Goals'] = df_goals[df_goals['Tags'].str.contains('Counter Attack')].groupby('Player')['Action'].count().reindex(all_players).fillna(0)
+
+    # SAV Score Logic: Goalkeeper Stats
+    # Catching
+    df_catch = df_with_xg[df_with_xg['Action'] == 'Catching']
+    summary['Catch_Count'] = df_catch.groupby('Player')['Action'].count().reindex(all_players).fillna(0)
+
+    # Team Conceded Stats (Assign Opponent's SOT xG and Goals to Player based on Player's Team)
+    # 1. Calculate Team-level SOT xG and Goals
+    team_stats = df_with_xg.groupby('TeamID').agg(
+        Team_SOT_xG=('xG', lambda x: x[df_with_xg['Action'].isin(['Goal', 'Shot On Target'])].sum()),
+        Team_Goals=('Action', lambda x: (x == 'Goal').sum())
+    ).to_dict('index')
+
+    # 2. Assign to players (Opponent stats)
+    player_teams = df_with_xg[['Player', 'TeamID']].drop_duplicates().set_index('Player')['TeamID']
+    all_team_ids = set(df_with_xg['TeamID'].unique())
+    
+    for player in all_players:
+        if player in player_teams:
+            my_team = player_teams[player]
+            # Assuming 2 teams, opponent is the one not my_team
+            opponent_teams = [tid for tid in all_team_ids if tid != my_team]
+            if opponent_teams:
+                # If multiple opponents (rare), sum them? Usually 1 vs 1.
+                opp_team = opponent_teams[0] 
+                stats = team_stats.get(opp_team, {'Team_SOT_xG': 0, 'Team_Goals': 0})
+                summary.at[player, 'Total_SOT_xG_Conceded'] = stats['Team_SOT_xG']
+                summary.at[player, 'Goals_Conceded'] = stats['Team_Goals']
     
     int_cols = ['Total_Shots', 'Shots_On_Target', 'Goals', 'Headed_Goals', 'Outbox_Goals', 'Counter_Attack_Goals']
     summary[int_cols] = summary[int_cols].astype(int)
@@ -148,7 +190,9 @@ def create_advanced_summary(df_analyzed):
         'Clear_Count', 'Cutout_Count', 'Block_Count',
         'Total_Aerial_Duels', 'Aerial_Duels_Won',
         'Received_Assist', 'Received_Key_Pass', 'SOT_Count', 'Goal_Count', 'Offside_Count',
-        'Dribble_Attempt', 'Cross_Success', 'Be_Fouled'
+        'Dribble_Attempt', 'Cross_Success', 'Be_Fouled',
+        'Valid_Dribble_Distance', 'Dribble_Fail_Count', 'Sprint_Count', 'Total_Sprint_Distance',
+        'Header_SOT', 'Header_Clear', 'Aerial_Duels_Lost'
     ]
     summary = pd.DataFrame(index=all_players)
     for col in required_cols: summary[col] = 0
@@ -237,5 +281,31 @@ def create_advanced_summary(df_analyzed):
     safe_update(df_dribble.groupby('Player')['Action'].count(), 'Dribble_Attempt')
     safe_update(df_cross_succ.groupby('Player')['Action'].count(), 'Cross_Success')
     safe_update(df_fouled.groupby('Player')['Action'].count(), 'Be_Fouled')
+    
+    # DRV Score Logic
+    # Valid Dribble Distance: Dribble with dist >= 5m
+    df_valid_dribble = df_dribble[df_dribble['Distance'] >= 5]
+    safe_update(df_valid_dribble.groupby('Player')['Distance'].sum(), 'Valid_Dribble_Distance')
+    
+    # Dribble Fail: Dribble not Success or Miss
+    # Assuming 'Dribble' actions without Success tag are failed, plus 'Miss' (which is already counted)
+    # However, 'Miss' is a separate action. Dribble action usually implies attempting to dribble.
+    # If app.py adds 'Fail' to Dribble, we should count that.
+    df_dribble_fail = df_dribble[~df_dribble['Tags'].str.contains('Success')]
+    # Use existing Miss_Count + Dribble_Fail_Count
+    safe_update(df_dribble_fail.groupby('Player')['Action'].count(), 'Dribble_Fail_Count')
+
+    # Sprint Logic
+    df_sprint = df_analyzed[df_analyzed['Action'] == 'Sprint']
+    safe_update(df_sprint.groupby('Player')['Action'].count(), 'Sprint_Count')
+    safe_update(df_sprint.groupby('Player')['Distance'].sum(), 'Total_Sprint_Distance')
+
+    # HED Additional Logic
+    df_header = df_analyzed[df_analyzed['Tags'].str.contains('Header')]
+    safe_update(df_header[df_header['Action'].isin(['Shot On Target', 'Goal'])].groupby('Player')['Action'].count(), 'Header_SOT')
+    safe_update(df_header[df_header['Action'] == 'Clear'].groupby('Player')['Action'].count(), 'Header_Clear')
+    
+    df_aerial_lost = df_analyzed[(df_analyzed['Action'] == 'Duel') & (df_analyzed['Tags'].str.contains('Aerial')) & (~df_analyzed['Tags'].str.contains('Success'))]
+    safe_update(df_aerial_lost.groupby('Player')['Action'].count(), 'Aerial_Duels_Lost')
 
     return summary.fillna(0).astype(int)
