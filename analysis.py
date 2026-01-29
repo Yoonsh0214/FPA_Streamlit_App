@@ -51,6 +51,16 @@ def analyze_pass_data(df):
 
 
 def add_xg_to_data(df):
+    """
+    새로운 xG 공식을 적용하여 슈팅 데이터에 xG 값을 추가합니다.
+    xG = 1 / (1 + exp(0.2 * dist - 2.0 * angle - 1.2 * is_pa + 1.5 * is_head + 0.8 * is_weak - 0.6))
+    
+    - dist: 골문까지의 거리
+    - angle: 슈팅 각도 (골문과 이루는 각도)
+    - is_pa: 페널티 박스 내 여부 (1: 안, 0: 밖) - Tags의 'In-box'로 판단
+    - is_head: 헤딩 여부 (1: 헤딩, 0: 아님) - Tags의 'Header'로 판단
+    - is_weak: 약발 여부 (1: 약발, 0: 아님) - Tags의 'Weak Foot'로 판단
+    """
     shot_action_codes = {'ddd': 'Goal', 'dd': 'Shot On Target', 'd': 'Shot', 'db': 'Blocked Shot'}
     shot_actions = list(shot_action_codes.values())
     df_shots = df[df['Action'].isin(shot_actions)].copy()
@@ -58,10 +68,43 @@ def add_xg_to_data(df):
         df['xG'] = np.nan
         return df
 
+    # 골문 좌표 (오른쪽 골대 중앙)
     goal_x, goal_y = 105, 34
+    goal_post_left = 30.34  # 골문 왼쪽 포스트 y좌표
+    goal_post_right = 37.66  # 골문 오른쪽 포스트 y좌표
+    
+    # 거리 계산
     distance = np.sqrt((goal_x - df_shots['StartX_adj'])**2 + (goal_y - df_shots['StartY_adj'])**2)
     
-    xg_values = 1 / (1 + np.exp(0.14 * distance - 2.5))
+    # 슈팅 각도 계산 (골문과 이루는 각도, 라디안 단위)
+    # 슈팅 위치에서 양쪽 골포스트까지의 벡터를 이용해 각도 계산
+    dx_left = goal_x - df_shots['StartX_adj']
+    dy_left = goal_post_left - df_shots['StartY_adj']
+    dx_right = goal_x - df_shots['StartX_adj']
+    dy_right = goal_post_right - df_shots['StartY_adj']
+    
+    # 두 벡터 사이의 각도 계산
+    angle_left = np.arctan2(dy_left, dx_left)
+    angle_right = np.arctan2(dy_right, dx_right)
+    angle = np.abs(angle_left - angle_right)  # 라디안 단위
+    
+    # Tags 컬럼에서 정보 추출
+    df_shots['Tags'] = df_shots['Tags'].astype(str).fillna('')
+    
+    # is_pa: 페널티 박스 내 여부 (In-box = 1, Out-box = 0)
+    is_pa = df_shots['Tags'].str.contains('In-box', case=False, na=False).astype(int)
+    
+    # is_head: 헤딩 여부 (Header = 1)
+    is_head = df_shots['Tags'].str.contains('Header', case=False, na=False).astype(int)
+    
+    # is_weak: 약발 여부 (Weak Foot = 1)
+    is_weak = df_shots['Tags'].str.contains('Weak Foot', case=False, na=False).astype(int)
+    
+    # xG 계산
+    # xG = 1 / (1 + exp(0.2 * dist - 2.0 * angle - 1.2 * is_pa + 1.5 * is_head + 0.8 * is_weak - 0.6))
+    exponent = 0.2 * distance - 2.0 * angle - 1.2 * is_pa + 1.5 * is_head + 0.8 * is_weak - 0.6
+    xg_values = 1 / (1 + np.exp(exponent))
+    
     df_shots['xG'] = xg_values
     
     df = pd.merge(df, df_shots[['No', 'xG']], on='No', how='left')
