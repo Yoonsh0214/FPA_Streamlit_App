@@ -57,7 +57,10 @@ def draw_heatmap_flask(df, p_id):
         plot_df = df[df['Player'] == p_id].dropna(subset=['StartX_adj', 'StartY_adj'])
         
         if not plot_df.empty:
-            pitch.kdeplot(x=plot_df['StartX_adj'], y=plot_df['StartY_adj'], ax=ax, fill=True, levels=100, thresh=0.05, cmap='hot', alpha=0.6)
+            # thresh를 높여서 히트맵 범위를 좁게 조정 (0.05 -> 0.3)
+            # levels를 줄여서 더 명확한 경계 표시 (100 -> 50)
+            pitch.kdeplot(x=plot_df['StartX_adj'], y=plot_df['StartY_adj'], ax=ax, 
+                         fill=True, levels=50, thresh=0.3, cmap='hot', alpha=0.7)
         else:
             ax.text(52.5, 34, "No Data", ha='center', va='center', fontsize=20, color='black')
             
