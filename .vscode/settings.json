@@ -1,0 +1,19 @@
+{
+    "python.analysis.exclude": [
+        "**/venv",
+        "**/.venv",
+        "**/__pycache__",
+        "**/.git"
+    ],
+    "python.analysis.indexing": true,
+    "python.analysis.typeCheckingMode": "off",
+    "files.watcherExclude": {
+        "**/venv/**": true,
+        "**/.git/**": true,
+        "**/__pycache__/**": true
+    },
+    "search.exclude": {
+        "**/venv": true,
+        "**/__pycache__": true
+    }
+}

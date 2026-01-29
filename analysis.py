@@ -4,7 +4,7 @@ import numpy as np
 # 모듈별 기능 분리
 from stats_utils import FIELD_W, FIELD_H, convert_time_to_seconds, is_in_final_third, is_in_penalty_area, is_progressive_pass
 from summaries import create_player_summary, create_shooter_summary, create_cross_summary, create_advanced_summary
-from scoring import calculate_passing_score, calculate_shooting_score, calculate_cross_score, calculate_dribbling_score, calculate_defending_score, calculate_advanced_scores
+from scoring import calculate_passing_score, calculate_shooting_score, calculate_cross_score, calculate_dribbling_score, calculate_drive_score, calculate_tackling_score, calculate_advanced_scores, calculate_buildup_score, calculate_save_score, calculate_header_score, calculate_pace_score
 
 def analyze_pass_data(df):
     """

@@ -2,6 +2,7 @@ import os
 import io
 import re
 import pandas as pd
+import numpy as np
 from flask import Flask, request, send_file, render_template, jsonify
 import analysis
 import matplotlib
@@ -17,8 +18,10 @@ def fig_to_base64(fig):
     return base64.b64encode(img.getvalue()).decode('utf-8')
 
 def draw_pass_map_flask(df, p_id):
-    pitch = Pitch(pitch_type='custom', pitch_length=105, pitch_width=68, pitch_color='grass', line_color='white', stripe=True)
-    fig, ax = pitch.draw(figsize=(10, 8))
+    # Reference Image Style: Striped Grass
+    pitch = Pitch(pitch_type='custom', pitch_length=105, pitch_width=68, 
+                  pitch_color='grass', line_color='white', stripe=True)
+    fig, ax = pitch.draw(figsize=(10, 7))
     
     # 데이터 타입 통일
     df['Player'] = df['Player'].astype(str).str.replace('.0', '', regex=False)
@@ -27,27 +30,44 @@ def draw_pass_map_flask(df, p_id):
     plot_df = df[(df['Player'] == p_id) & (df['Action'].str.contains('Pass', case=False, na=False))]
     
     req_cols = ['StartX_adj', 'StartY_adj', 'EndX_adj', 'EndY_adj']
-    # 분석 데이터 없으면 분석 수행 (방어 로직)
     if not all(col in df.columns for col in req_cols):
-         # 여기서는 이미 분석된 데이터가 들어온다고 가정하지만, 혹시 모르니 체크
          return None
 
     plot_df = plot_df.dropna(subset=req_cols)
     
+    # Colors from Reference: Blue (Success), Red (Fail)
+    success_color = 'blue'
+    fail_color = 'red'
+    
     for _, row in plot_df.iterrows():
         tags = str(row['Tags']) if pd.notna(row['Tags']) else ''
-        color = '#0dff00' if 'Success' in tags else 'red'
+        is_success = 'Success' in tags
+        
+        color = success_color if is_success else fail_color
+        linestyle = '-' if is_success else '--' # Dashed for failure
+        alpha = 0.8
+        
+        # 1. 꼬리 (원형) - Rounded Tail: Remove border as requested
+        pitch.scatter(row['StartX_adj'], row['StartY_adj'], ax=ax, 
+                      color=color, edgecolors='none', s=60, alpha=alpha, zorder=2)
+                      
+        # 2. 화살표 (Arrow)
         pitch.arrows(row['StartX_adj'], row['StartY_adj'], row['EndX_adj'], row['EndY_adj'], 
-                     color=color, ax=ax, width=2, zorder=2)
+                     color=color, ax=ax, width=2, headwidth=3, headlength=3, 
+                     linestyle=linestyle, alpha=alpha, zorder=1)
     
-    ax.set_title(f"Player {p_id} | Pass Map", fontsize=20, fontweight='bold', pad=15)
+    # Remove Title and Legend as requested
+    # ax.set_title(f"Player {p_id} | Pass Map", fontsize=20, fontweight='bold', pad=15)
+    
     base64_img = fig_to_base64(fig)
     plt.close(fig)
     return base64_img
 
 def draw_heatmap_flask(df, p_id):
-    pitch = Pitch(pitch_type='custom', pitch_length=105, pitch_width=68, pitch_color='grass', line_color='white')
-    fig, ax = pitch.draw(figsize=(10, 8))
+    # Match Pass Map Style: Striped Grass
+    pitch = Pitch(pitch_type='custom', pitch_length=105, pitch_width=68, 
+                  pitch_color='grass', line_color='white', stripe=True)
+    fig, ax = pitch.draw(figsize=(10, 7))
     
     # 데이터 타입 통일
     df['Player'] = df['Player'].astype(str).str.replace('.0', '', regex=False)
@@ -62,9 +82,11 @@ def draw_heatmap_flask(df, p_id):
             pitch.kdeplot(x=plot_df['StartX_adj'], y=plot_df['StartY_adj'], ax=ax, 
                          fill=True, levels=50, thresh=0.3, cmap='hot', alpha=0.7)
         else:
-            ax.text(52.5, 34, "No Data", ha='center', va='center', fontsize=20, color='black')
+            ax.text(52.5, 34, "No Data", ha='center', va='center', fontsize=20, color='white')
             
-    ax.set_title(f"Player {p_id} | Heatmap", fontsize=20, fontweight='bold', pad=15)
+    # Remove Title as requested
+    # ax.set_title(f"Player {p_id} | Heatmap", fontsize=20, fontweight='bold', pad=15)
+    
     base64_img = fig_to_base64(fig)
     plt.close(fig)
     return base64_img
@@ -72,7 +94,7 @@ def draw_heatmap_flask(df, p_id):
 app = Flask(__name__, static_url_path='/static')
 
 # --- 상수 (기존 ui.py에서 가져옴) ---
-ACTION_CODES = { 'ddd': 'Goal', 'dd': 'Shot On Target', 'd': 'Shot', 'db': 'Blocked Shot', 'zz': 'Assist', 'z': 'Key Pass', 'cc': 'Cross', 'c': 'Cross', 'ss': 'Pass', 's': 'Pass', 'ee': 'Breakthrough', 'rr': 'Dribble', 'gp': 'Gain', 'm': 'Miss', 'aa': 'Tackle', 'q': 'Intercept', 'qq': 'Acquisition', 'w': 'Clear', 'ww': 'Cutout', 'qw': 'Block', 'v': 'Catching', 'vv': 'Punching', 'bb': 'Duel', 'b': 'Duel', 'f': 'Foul', 'ff': 'Be Fouled', 'o': 'Offside', 't': 'Touch' }
+ACTION_CODES = { 'ddd': 'Goal', 'dd': 'Shot On Target', 'd': 'Shot', 'db': 'Blocked Shot', 'zz': 'Assist', 'z': 'Key Pass', 'cc': 'Cross', 'c': 'Cross', 'ss': 'Pass', 's': 'Pass', 'ee': 'Breakthrough', 'rr': 'Dribble', 'gp': 'Gain', 'm': 'Miss', 'aa': 'Tackle', 'q': 'Intercept', 'qq': 'Acquisition', 'w': 'Clear', 'ww': 'Cutout', 'qw': 'Block', 'v': 'Catching', 'vv': 'Punching', 'bb': 'Duel', 'b': 'Duel', 'f': 'Foul', 'ff': 'Be Fouled', 'o': 'Offside', 't': 'Touch', 'st': 'Sprint' }
 TAG_CODES = { 'k': 'Key', 'a': 'Assist', 'h': 'Header', 'r': 'Aerial', 'w': 'Suffered', 'n': 'In-box', 'u': 'Out-box', 'p': 'Progressive', 'c': 'Counter Attack', 'sw': 'Switch', 'wf': 'Weak Foot', 'ft': 'First Time' }
 TWO_DOT_ACTION_CODES = {'s', 'c', 'r', 'e'}
 
@@ -227,15 +249,27 @@ def export_data():
             cross_summary.to_excel(writer, sheet_name='Cross_Summary')
             advanced_summary.to_excel(writer, sheet_name='Advanced_Summary')
             final_stats_df = pd.DataFrame(index=df_analyzed_with_xg['Player'].unique())
-            if not shooter_summary.empty: final_stats_df = final_stats_df.join(analysis.calculate_shooting_score(shooter_summary.copy())[['Shooting_Score']], how='left')
-            if not cross_summary.empty: final_stats_df = final_stats_df.join(analysis.calculate_cross_score(cross_summary.copy())[['Cross_Score']], how='left')
-            if not advanced_summary.empty:
-                final_stats_df = final_stats_df.join(analysis.calculate_passing_score(pass_summary.copy(), advanced_summary.copy())[['Passing_Score']], how='left')
-                final_stats_df = final_stats_df.join(analysis.calculate_dribbling_score(advanced_summary.copy())[['Dribbling_Score']], how='left')
-                final_stats_df = final_stats_df.join(analysis.calculate_defending_score(advanced_summary.copy())[['Defending_Score']], how='left')
-                remaining_advanced_scores = analysis.calculate_advanced_scores(advanced_summary.copy(), pass_summary.copy())
-                score_cols_to_join = [col for col in remaining_advanced_scores.columns if '_Score' in col]
-                if score_cols_to_join: final_stats_df = final_stats_df.join(remaining_advanced_scores[score_cols_to_join], how='left')
+            
+            # Merge all summaries for unified scoring
+            all_stats = final_stats_df.join([pass_summary, shooter_summary, cross_summary, advanced_summary], how='outer').fillna(0)
+            
+            # Calculate Scores
+            all_stats = analysis.calculate_passing_score(all_stats, all_stats)
+            all_stats = analysis.calculate_buildup_score(all_stats)
+            all_stats = analysis.calculate_shooting_score(all_stats)
+            all_stats = analysis.calculate_save_score(all_stats)
+            all_stats = analysis.calculate_cross_score(all_stats)
+            all_stats = analysis.calculate_dribbling_score(all_stats)
+            all_stats = analysis.calculate_drive_score(all_stats)
+            all_stats = analysis.calculate_tackling_score(all_stats)
+            all_stats = analysis.calculate_header_score(all_stats)
+            all_stats = analysis.calculate_pace_score(all_stats)
+            all_stats = analysis.calculate_advanced_scores(all_stats, all_stats)
+
+            # Filter Score Columns
+            score_cols = [col for col in all_stats.columns if '_Score' in col]
+            final_stats_df = all_stats[score_cols].copy()
+            
             if not final_stats_df.empty:
                 final_stats_df = final_stats_df.fillna(0).astype(int)
                 final_stats_df.index.name = 'Player'
@@ -282,15 +316,27 @@ def upload_and_analyze():
                 cross_summary.to_excel(writer, sheet_name='Cross_Summary')
                 advanced_summary.to_excel(writer, sheet_name='Advanced_Summary')
                 final_stats_df = pd.DataFrame(index=df_analyzed_with_xg['Player'].unique())
-                if not shooter_summary.empty: final_stats_df = final_stats_df.join(analysis.calculate_shooting_score(shooter_summary.copy())[['Shooting_Score']], how='left')
-                if not cross_summary.empty: final_stats_df = final_stats_df.join(analysis.calculate_cross_score(cross_summary.copy())[['Cross_Score']], how='left')
-                if not advanced_summary.empty:
-                    final_stats_df = final_stats_df.join(analysis.calculate_passing_score(pass_summary.copy(), advanced_summary.copy())[['Passing_Score']], how='left')
-                    final_stats_df = final_stats_df.join(analysis.calculate_dribbling_score(advanced_summary.copy())[['Dribbling_Score']], how='left')
-                    final_stats_df = final_stats_df.join(analysis.calculate_defending_score(advanced_summary.copy())[['Defending_Score']], how='left')
-                    remaining_advanced_scores = analysis.calculate_advanced_scores(advanced_summary.copy(), pass_summary.copy())
-                    score_cols_to_join = [col for col in remaining_advanced_scores.columns if '_Score' in col]
-                    if score_cols_to_join: final_stats_df = final_stats_df.join(remaining_advanced_scores[score_cols_to_join], how='left')
+                
+                # Merge all summaries for unified scoring
+                all_stats = final_stats_df.join([pass_summary, shooter_summary, cross_summary, advanced_summary], how='outer').fillna(0)
+                
+                # Calculate Scores
+                all_stats = analysis.calculate_passing_score(all_stats, all_stats)
+                all_stats = analysis.calculate_buildup_score(all_stats)
+                all_stats = analysis.calculate_shooting_score(all_stats)
+                all_stats = analysis.calculate_save_score(all_stats)
+                all_stats = analysis.calculate_cross_score(all_stats)
+                all_stats = analysis.calculate_dribbling_score(all_stats)
+                all_stats = analysis.calculate_drive_score(all_stats)
+                all_stats = analysis.calculate_tackling_score(all_stats)
+                all_stats = analysis.calculate_header_score(all_stats)
+                all_stats = analysis.calculate_pace_score(all_stats)
+                all_stats = analysis.calculate_advanced_scores(all_stats, all_stats)
+
+                # Filter Score Columns
+                score_cols = [col for col in all_stats.columns if '_Score' in col]
+                final_stats_df = all_stats[score_cols].copy()
+
                 if not final_stats_df.empty:
                     final_stats_df = final_stats_df.fillna(0).astype(int)
                     final_stats_df.index.name = 'Player'

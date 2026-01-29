@@ -1,126 +1,84 @@
-# FPA Web App Statistics & Calculation Manual
+# FPA Web App 통계 및 산출 공식 매뉴얼
 
-이 문서는 FPA Web App에서 사용되는 통계 지표와 계산 공식을 설명합니다.
+## 1. 개요
+이 문서는 FPA Web App에서 사용되는 이벤트 코드와 각 스탯 별 점수 산출 공식을 설명합니다.
 
-## 1. 경기장 및 구역 정의 (stats_utils.py)
-기본 경기장 규격은 **105m x 68m**입니다.
+## 2. 이벤트 코드 (Action Codes)
 
-*   **Final Third (파이널 서드)**: X 좌표가 **70m 이상**인 구역
-*   **Penalty Area (페널티 박스)**:
-    *   X 좌표: **88.5m 초과**
-    *   Y 좌표: **13.84m 초과 ~ 54.16m 미만**
-*   **Progressive Pass (전진 패스)**: 패스 시작 지점보다 도착 지점의 X 좌표가 **10m 이상** 전진한 경우
-
----
-
-## 2. 패스 분석 기준 (analysis.py)
-패스는 거리와 방향에 따라 다음과 같이 분류됩니다.
-
-### 거리 (Distance)
-*   **Short**: 20m 미만
-*   **Middle**: 20m 이상 ~ 40m 미만
-*   **Long**: 40m 이상
-
-### 방향 (Direction)
-각도는 도착 지점과 시작 지점의 좌표 차이를 이용해 계산합니다.
-*   **Forward (전방)**: 315도 ~ 45도
-*   **Left (좌측)**: 45도 ~ 135도
-*   **Backward (후방)**: 135도 ~ 225도
-*   **Right (우측)**: 225도 ~ 315도
-
-### xG (기대 득점) 계산
-슈팅 위치와 골대 중심(105, 34) 사이의 거리를 기반으로 계산됩니다.
-*   `xG = 1 / (1 + exp(0.14 * distance - 2.5))`
+| 코드 | 액션명 | 설명 |
+|---|---|---|
+| `ss`, `s` | Pass | 패스 (2점 입력) |
+| `d`, `db` | Shot, Blocked Shot | 슈팅, 막힌 슈팅 |
+| `dd` | Shot On Target | 유효 슈팅 |
+| `ddd` | Goal | 득점 |
+| `zz`, `z` | Assist, Key Pass | 어시스트, 키패스 |
+| `cc`, `c` | Cross | 크로스 (2점 입력) |
+| `ee` | Breakthrough | 돌파/탈압박 (2점 입력) |
+| `rr` | Dribble | 드리블 (1점 입력) |
+| `aa` | Tackle | 태클 |
+| `q` | Intercept | 인터셉트 |
+| `w` | Clear | 클리어 |
+| `ww`, `qw` | Cutout, Block | 커트, 블락 |
+| `v`, `vv` | Catching, Punching | 골키퍼 캐칭, 펀칭 |
+| `bb`, `b` | Duel | 경합 |
+| `f`, `ff` | Foul, Be Fouled | 파울, 피파울 |
+| `o` | Offside | 오프사이드 |
+| `t` | Touch | 터치 |
+| `st` | Sprint | 스프린트 (2점 입력) |
 
 ---
 
-## 3. 스코어 산출 공식 (scoring.py)
-모든 점수는 Raw Score(원점수)를 계산한 후, **Sigmoid 함수**를 통해 0~100점 사이의 점수로 변환됩니다.
-*   *변환 공식*: `Score = 100 / (1 + exp(-steepness * (Raw - mid_point)))`
+## 3. 스코어 산출 공식 (Scoring Logic)
 
-### 1) Passing Score (패싱 점수)
-패스 성공률과 전진성, 찬스 메이킹을 종합적으로 평가합니다.
+각 점수는 Raw Score를 산출한 후 시그모이드(Sigmoid) 함수를 통해 0~100점 사이의 점수로 변환됩니다.
+**모든 스코어는 기본적으로 Raw Score가 0일 때 50점이 되도록 설정되어 있습니다. (데이터가 없는 경우도 50점으로 처리)**
 
-**Raw Score 계산식:**
-```
-(Pass_Success_Rate * 0.8) +
-(Progressive_Pass_Success_Count * 1.5) +
-(Key_Pass * 2.5) +
-(Assist * 5) +
-(PA_Pass_Success * 3) -
-(Pass_Fail_Count * 0.5)
-```
-*   *Sigmoid 파라미터*: mid_point = -5, steepness = 0.08
+### 1) Passing Score (패스 점수)
+*   **공식**: `(성공률 * 0.8) + (전진패스 * 1.5) + (키패스 * 2.5) + (어시스트 * 5) + (박스안패스 * 3) - (패스미스 * 0.5)`
+*   기본적인 패스 능력과 찬스 메이킹 능력을 종합적으로 평가합니다.
 
 ### 2) Shooting Score (슈팅 점수)
-득점 효율성과 골 결정력을 평가합니다. (xG 대비 득점이 중요)
-
-**Raw Score 계산식:**
-```
-((Goals - Total_xG) * 10) +
-(Total_xG * 15) +
-(Headed_Goals * 5) +
-(Outbox_Goals * 3)
-```
-*   *Sigmoid 파라미터*: mid_point = -2.2, steepness = 0.18
+*   **공식**: `((득점 - xG) * 10) + (xG * 15) + (헤더득점 * 5) + (중거리/박스밖득점 * 3)`
+*   득점 결정력과 예상 득점(xG) 창출 능력을 평가합니다.
 
 ### 3) Cross Score (크로스 점수)
-크로스 정확도와 위험 지역(중앙)으로의 공급 능력을 평가합니다.
+*   **공식**: `(성공률 * 0.7) + (ln(성공개수) * 3) + (중앙/박스안 연결 * 2.5)`
+*   크로스의 정확도와 위협적인 지역으로의 연결 빈도를 평가합니다.
 
-**Raw Score 계산식:**
-```
-Base = (Cross_Accuracy * 0.7) + (ln(1 + Successful_Crosses) * 3)
-Bonus = Central_PA_Cross_Success * 2.5
-Raw = Base + Bonus
-```
-*   *Sigmoid 파라미터*: mid_point = -4, steepness = 0.1
+### 4) Dribbling Score (드리블 점수 - 성공/실패 기반)
+*   **공식**: `(돌파성공 * 3) - ((드리블실패+미스) * 1) + (피파울 * 0.8)`
+*   상대를 제치거나 파울을 유도하는 온더볼 능력을 평가합니다.
 
-### 4) Dribbling Score (드리블 점수)
-돌파 성공과 실패에 따른 리스크를 평가합니다.
+### 5) TAC Score (Tackling - 태클 및 수비)
+*   **공식**: `(태클성공 * 2) - (태클실패 * 1) + (인터셉트 * 1.5) + (블락 * 1.2) + (클리어 * 1) + (공중볼승리 * 1.5) - (공중볼패배 * 0.5) + (경합승리 * 0.5)`
+*   기존 Defending Score를 대체하며, 적극적인 수비 개입과 대인 방어 능력을 평가합니다.
 
-**Raw Score 계산식:**
-```
-(Breakthrough_Success * 3) -
-((Failed_Dribble + Miss_Count) * 1) +
-(Be_Fouled * 0.8)
-```
-*   *Sigmoid 파라미터*: mid_point = -2, steepness = 0.2
+### 6) DRV Score (Drive - 볼 운반)
+*   **공식**: `(∑유효드리블거리(5m이상) * 0.15) - (드리블장소실패 * 2)`
+*   공을 소유하고 전진한 거리(Carrying)를 기반으로 볼 운반 능력을 평가합니다.
 
-### 5) Defending Score (수비 점수)
-적극적인 수비 성공과 실패를 평가합니다.
+### 7) BLD Score (Build-up - 후방 빌드업)
+*   **공식**: `∑(자기진영 패스 점수) - (자기진영 패스미스 * 2)`
+    *   *자기진영 패스 점수*: 기본 0.5점 + (전진거리 5m 이상 시 거리 * 0.1 추가 보너스)
+*   수비 지역에서의 안정적인 볼 배급과 전진 패스 기여도를 평가합니다.
 
-**Raw Score 계산식:**
-```
-(Successful_Tackles * 2) - (Failed_Tackles * 1) +
-(Intercept_Count * 1.5) +
-(Block_Count * 1.2) +
-(Clear_Count * 1) +
-(Aerial_Duels_Won * 1.5) - (Failed_Aerials * 0.5) +
-(Duel_Win_Count * 0.5)
-```
-*   *Sigmoid 파라미터*: mid_point = -2.7, steepness = 0.15
+### 8) SAV Score (Save - 골키퍼 선방)
+*   **공식**: `((피유효슈팅xG - 실점) * 10) + (선방xG * 10) + (캐칭 * 2)`
+    *   *선방xG*: 골로 연결되지 않은 유효슈팅의 xG 합계
+*   골키퍼의 슈팅 방어 능력(Goals Prevented)과 안정감(Catching)을 평가합니다.
+
+### 9) HED Score (Header - 공중볼 장악)
+*   **공식**: `(헤더유효슈팅 * 3) + (헤더득점 * 2) + (공중볼승리 * 2) + (헤더클리어 * 1) - (공중볼패배 * 1.5)`
+*   공중볼 경합 승리, 헤더 슈팅 및 클리어링 등 제공권 장악 능력을 평가합니다.
+
+### 10) PAC Score (Pace - 주력/활동량)
+*   **공식**: `(스프린트횟수 * 1) + (총스프린트거리 * 0.1)`
+*   `st` 코드로 입력된 스프린트 데이터(횟수, 거리)를 기반으로 선수의 기동력을 평가합니다.
 
 ---
 
 ## 4. 고급 지표 (Advanced Scores)
 
-### 1) FST Score (First Touch - 안정성)
-공을 받았을 때 다음 동작(패스, 돌파)을 성공적으로 이어가는 비율입니다.
-*   **식**: `(Pass_Success + Breakthrough_Success) / (위의 분자 + Pass_Fail + Miss)`
-*   *Sigmoid 파라미터*: mid_point = 80, steepness = 0.15 (기본점수 60)
-
-### 2) OFF Score (Off The Ball - 움직임)
-공을 받지 않은 상황에서의 기여도(좋은 위치 선정, 침투)를 평가합니다.
-*   **Raw Score**:
-    ```
-    (Received_Assist * 3) +
-    (Received_Key_Pass * 1.5) +
-    SOT_Count + Goal_Count -
-    (Offside_Count * 2)
-    ```
-*   *Sigmoid 파라미터*: mid_point = -1.6, steepness = 0.25
-
-### 3) DEC Score (Decision Making - 판단력)
-**Final Third(공격 지역)**에서의 플레이 성공률만을 따로 계산하여 판단력을 평가합니다.
-*   **식**: `(FT_Pass_Success + FT_Breakthrough_Success) / (위의 분자 + FT_Pass_Fail + FT_Miss + FT_Offside)`
-*   *Sigmoid 파라미터*: mid_point = 80, steepness = 0.15 (기본점수 60)
+*   **FST (First Touch)**: 패스/돌파 성공률을 기반으로 한 볼 키핑 안정성.
+*   **OFF (Off The Ball)**: 받은 패스, 슈팅 기회 창출, 오프사이드 등을 통한 움직임 평가.
+*   **DEC (Decision)**: 원터치 플레이(First Time)의 성공률을 통한 판단 속도 및 정확성 평가.
