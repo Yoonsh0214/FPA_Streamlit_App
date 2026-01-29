@@ -951,6 +951,9 @@
 
             dots.push({ x, y, meter_x, meter_y });
             drawDot(x, y);
+            
+            // 점을 찍으면 자동으로 stat input 텍스트박스에 포커스
+            document.getElementById('stat_input').focus();
         });
 
         // 우클릭: 마지막 점 삭제
