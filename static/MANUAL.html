@@ -366,6 +366,12 @@
                     <td>1개</td>
                     <td>펀칭</td>
                 </tr>
+                <tr>
+                    <td><code>sv</code></td>
+                    <td>Save</td>
+                    <td>1개</td>
+                    <td>세이브</td>
+                </tr>
             </tbody>
         </table>
 
@@ -415,6 +421,12 @@
                     <td>Touch</td>
                     <td>1개</td>
                     <td>위치 기록 (터치)</td>
+                </tr>
+                <tr>
+                    <td><code>tr</code></td>
+                    <td>Throw-in</td>
+                    <td>2개</td>
+                    <td>스로인</td>
                 </tr>
             </tbody>
         </table>
@@ -508,13 +520,22 @@
             <tbody>
                 <tr>
                     <td>Success</td>
-                    <td>액션 코드가 2번 반복 (예: <code>ss</code>, <code>cc</code>, <code>dd</code>)</td>
+                    <td>액션 코드를 2번 반복 (<code>ss</code>, <code>cc</code>, <code>aa</code> 등) <br>
+                        또는 항상 성공인 코드 (<code>z</code>, <code>gp</code>, <code>w</code>, <code>qw</code>, <code>v</code>, <code>vv</code>, <code>sv</code>, <code>dd</code>, <code>ddd</code>)
+                    </td>
                     <td>성공</td>
                 </tr>
                 <tr>
                     <td>Fail</td>
-                    <td>액션 코드가 1번만 (예: <code>s</code>, <code>c</code>, <code>d</code>)</td>
+                    <td>액션 코드를 1번만 (<code>s</code>, <code>c</code>, <code>a</code> 등) <br>
+                        또는 항상 실패인 코드 (<code>d</code>, <code>db</code>)
+                    </td>
                     <td>실패</td>
+                </tr>
+                <tr>
+                    <td>Receiver Required</td>
+                    <td>패스, 크로스, 키패스, 스로인 (<code>s</code>, <code>c</code>, <code>z</code>, <code>tr</code>)</td>
+                    <td>반드시 받는 선수 번호와 좌표 2개 필요 (예: 10ss8, 10tr8)</td>
                 </tr>
                 <tr>
                     <td>Progressive</td>
