@@ -94,9 +94,9 @@ def draw_heatmap_flask(df, p_id):
 app = Flask(__name__, static_url_path='/static')
 
 # --- 상수 (기존 ui.py에서 가져옴) ---
-ACTION_CODES = { 'ddd': 'Goal', 'dd': 'Shot On Target', 'd': 'Shot', 'db': 'Blocked Shot', 'zz': 'Assist', 'z': 'Key Pass', 'cc': 'Cross', 'c': 'Cross', 'ss': 'Pass', 's': 'Pass', 'ee': 'Breakthrough', 'rr': 'Dribble', 'gp': 'Gain', 'm': 'Miss', 'aa': 'Tackle', 'q': 'Intercept', 'qq': 'Acquisition', 'w': 'Clear', 'ww': 'Cutout', 'qw': 'Block', 'v': 'Catching', 'vv': 'Punching', 'bb': 'Duel', 'b': 'Duel', 'f': 'Foul', 'ff': 'Be Fouled', 'o': 'Offside', 't': 'Touch', 'st': 'Sprint' }
+ACTION_CODES = { 'ddd': 'Goal', 'dd': 'Shot On Target', 'd': 'Shot', 'db': 'Blocked Shot', 'zz': 'Assist', 'z': 'Key Pass', 'cc': 'Cross', 'c': 'Cross', 'ss': 'Pass', 's': 'Pass', 'ee': 'Breakthrough', 'rr': 'Dribble', 'gp': 'Gain', 'm': 'Miss', 'aa': 'Tackle', 'q': 'Intercept', 'qq': 'Acquisition', 'w': 'Clear', 'ww': 'Cutout', 'qw': 'Block', 'v': 'Catching', 'vv': 'Punching', 'sv': 'Save', 'bb': 'Duel', 'b': 'Duel', 'f': 'Foul', 'ff': 'Be Fouled', 'o': 'Offside', 't': 'Touch', 'st': 'Sprint', 'tr': 'Throw-in' }
 TAG_CODES = { 'k': 'Key', 'a': 'Assist', 'h': 'Header', 'r': 'Aerial', 'w': 'Suffered', 'n': 'In-box', 'u': 'Out-box', 'p': 'Progressive', 'c': 'Counter Attack', 'sw': 'Switch', 'wf': 'Weak Foot', 'ft': 'First Time' }
-TWO_DOT_ACTION_CODES = {'s', 'c', 'r', 'e'}
+TWO_DOT_ACTION_CODES = {'s', 'c', 'r', 'e', 'z', 'tr'}
 
 def parse_logs_to_dataframe(logs, match_id, teamid_h, teamid_a):
     parsed_logs = []
@@ -157,20 +157,27 @@ def generate_log():
         action_name = ACTION_CODES.get(action_code_raw) or ACTION_CODES.get(base_action_code)
         if not action_name: raise ValueError("알 수 없는 액션 코드")
 
+        # [수정] 패스, 크로스, 키패스/어시스트, 스로인은 반드시 받는 선수(player_to)가 있어야 함
+        # 'sv'(세이브)는 's'로 시작하지만 단독 액션이므로 예외 처리
+        if (base_action_code in ['s', 'c', 'z'] or action_code_raw == 'tr') and action_code_raw != 'sv' and not player_to:
+            raise ValueError(f"'{action_name}' 액션은 받는 선수 번호가 필요합니다. (예: 10{action_code_raw}8)")
+
         tags_list = [TAG_CODES[tc] for tc in tag_codes if tc in TAG_CODES]
         
         # Success/Fail 태그 자동 추가
-        if action_code_raw not in ['t', 'm', 'q', 'p', 'l', 'qq', 'bl', 'o', 'd', 'db']:
+        # keypass(z), gain(gp), clear(w), block(qw), catching(v), punching(vv), save(sv) 등은 Success로 처리
+        if action_code_raw in ['z', 'gp', 'w', 'qw', 'v', 'vv', 'sv', 'dd', 'ddd']:
+             tags_list.append('Success')
+        elif action_code_raw in ['d', 'db']:
+             tags_list.append('Fail')
+        elif action_code_raw not in ['t', 'm', 'q', 'p', 'l', 'qq', 'bl', 'o', 'st']:
              if len(action_code_raw) > 1 and action_code_raw[0] == action_code_raw[1]:
                  tags_list.append('Success')
              else:
                  tags_list.append('Fail')
-        elif action_code_raw in ['dd', 'ddd']:
-            tags_list.append('Success')
-        elif action_code_raw in ['d', 'db']:
-            tags_list.append('Fail')
 
-        requires_two_dots = base_action_code in TWO_DOT_ACTION_CODES or player_to
+        # 'sv'는 s로 시작하지만 좌표 1개만 필요함
+        requires_two_dots = (base_action_code in TWO_DOT_ACTION_CODES or action_code_raw in TWO_DOT_ACTION_CODES or player_to) and action_code_raw != 'sv'
         if requires_two_dots:
             if len(dots) < 2: raise ValueError("좌표 2개가 필요합니다.")
             start_pos, end_pos = dots[-2], dots[-1]
