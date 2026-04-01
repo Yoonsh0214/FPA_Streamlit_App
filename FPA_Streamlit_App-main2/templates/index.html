@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FPA Live Analyzer</title>
+    <style>
+        :root {
+            --primary-color: #FF7400;
+            /* Original Primary (Keep for Logo/Highlights if needed) */
+            --soft-primary: #FFAB40;
+            /* Lighter Button Color */
+            --soft-primary-hover: #FF9100;
+            --bg-color: #fcfaf9;
+            /* Warm Neutral (Gray + Hint of Orange) */
+            --card-bg: #ffffff;
+            --text-color: #333;
+            --border-color: #eaddd5;
+            /* Warm Border */
+            --shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+            /* Revert shadow */
+            --gray-light: #fbf8f6;
+            /* Warm Light Gray */
+            --gray-medium: #eee5e0;
+            /* Warm Medium Gray */
+        }
+
+        /* Specific override for placeholder */
+        ::placeholder {
+            color: #adb5bd;
+            font-weight: normal;
+            font-size: 14px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 15px;
+            color: var(--text-color);
+            font-size: 14px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 6px;
+            padding: 10px;
+            /* Reduced from 15px */
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+        }
+
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 1600px;
+            margin: auto;
+            gap: 8px;
+            /* Reduced from 15px */
+            align-items: stretch;
+        }
+
+        .controls-container {
+            width: 100%;
+            display: flex;
+            gap: 15px;
+            flex-shrink: 0;
+        }
+
+        .controls-container>.card {
+            flex: 1;
+        }
+
+        .visual-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: row;
+            gap: 15px;
+        }
+
+        .visual-container>.card:first-child {
+            flex: 1;
+        }
+
+        .visual-container>.card:last-child {
+            flex: 1.5;
+        }
+
+        .visual-container .card {
+            width: 100%;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .visual-container h2 {
+            margin: 0;
+        }
+
+        #log_display {
+            flex-grow: 1;
+            height: 100%;
+            resize: none;
+        }
+
+        h1 {
+            font-size: 24px;
+        }
+
+        h2 {
+            font-size: 16px;
+            color: var(--primary-color);
+        }
+
+        h4 {
+            font-size: 16px;
+            color: var(--primary-color);
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+            font-size: 14px;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        #stat_input {
+            height: 36px;
+            border: 2px solid var(--primary-color);
+            font-weight: bold;
+        }
+
+        /* 탭 스타일 */
+        .radio-row {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            margin-top: 15px;
+            flex: 1;
+        }
+
+        .radio-row p {
+            font-size: 10px;
+            margin: 0;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .tabs {
+            display: flex;
+            position: relative;
+            background-color: #fff;
+            box-shadow: 0 1px 3px 0 rgba(255, 116, 0, 0.1);
+            padding: 2px;
+            /* Reduced specific padding */
+            border-radius: 12px;
+            width: 100%;
+            /* Full width */
+            box-sizing: border-box;
+        }
+
+        .tabs * {
+            z-index: 2;
+        }
+
+        .tabs input[type="radio"] {
+            display: none;
+        }
+
+        .tab {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 32px;
+            /* 36px total - 4px padding = 32px inner */
+            /* Reduced from 36px */
+            width: auto;
+            /* Allow flex to control width */
+            flex: 1;
+            /* Distribute space evenly */
+            font-size: .8rem;
+            color: black;
+            font-weight: 500;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: color 0.15s ease-in;
+            margin: 0;
+            z-index: 2;
+        }
+
+        .tabs input[type="radio"]:checked+label {
+            color: #FF7400;
+        }
+
+        .glider {
+            position: absolute;
+            display: flex;
+            height: 32px;
+            /* Match tab height */
+            /* Reduced from 36px */
+            width: 50%;
+            /* Half of the container */
+            background-color: #fff0e6;
+            z-index: 1;
+            border-radius: 12px;
+            transition: 0.25s ease-out;
+        }
+
+        .tabs input[type="radio"]:nth-of-type(1):checked~.glider {
+            transform: translateX(0);
+        }
+
+        .tabs input[type="radio"]:nth-of-type(2):checked~.glider {
+            transform: translateX(100%);
+        }
+
+        #field-wrapper {
+            position: relative;
+        }
+
+        #field-image {
+            width: 100%;
+            display: block;
+            border-radius: 5px;
+        }
+
+        .dot {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #FF7740;
+            border-radius: 50%;
+            border: 1.5px solid white;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes popIn {
+            0% {
+                transform: translate(-50%, -50%) scale(0);
+                opacity: 0;
+            }
+
+            70% {
+                transform: translate(-50%, -50%) scale(1.5);
+                opacity: 0.8;
+            }
+
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: #f8f6f4;
+            /* Light Warm Gray to distinguish from inputs */
+            color: #333;
+            /* Dark Text */
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            /* Add Shadow */
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background-color: #eee5e0;
+            /* Slightly darker warm gray on hover */
+            border-color: #dbe0e4;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Keep Submit Button Vibrant */
+        #submit_stat {
+            background-color: var(--primary-color);
+            color: white;
+            border: 1px solid var(--primary-color);
+            box-shadow: 0 2px 4px rgba(255, 116, 0, 0.2);
+        }
+
+        #submit_stat:hover {
+            background-color: var(--primary-hover);
+            border-color: var(--primary-hover);
+            box-shadow: 0 4px 8px rgba(255, 116, 0, 0.3);
+        }
+
+        #export_logs {
+            background-color: var(--primary-color);
+            color: white;
+            border: 1px solid var(--primary-color);
+        }
+
+        #export_logs:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        #mode-selector button {
+            background-color: #fff;
+            color: #666;
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #eaddd5;
+            border-radius: 6px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            /* Added Shadow */
+            transition: all 0.2s;
+        }
+
+        #mode-selector button:hover {
+            background-color: #f8f9fa;
+        }
+
+        #mode-selector button.active {
+            background-color: #FFE3CC;
+            /* Primary mixed with White (~20% tint) */
+            color: #E65100;
+            /* Dark Orange Text */
+            font-weight: bold;
+            border-color: #FFCC80;
+            box-shadow: 0 2px 4px rgba(255, 116, 0, 0.15);
+            /* Orange tinted shadow */
+        }
+
+        @media (max-width: 800px) {
+            .main-container {
+                flex-direction: column;
+            }
+
+            .controls-container {
+                width: 100%;
+            }
+
+            .setup-container {
+                flex-direction: column;
+                align-items: center;
+                gap: 15px;
+            }
+        }
+
+        .setup-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .setup-column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            /* Reduced from 15px */
+        }
+
+        .input-label {
+            font-size: 12px;
+            font-weight: bold;
+            color: #6c757d;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .setup-input {
+            width: 100%;
+            height: 36px;
+            /* Reduced to match tab height */
+            /* Match height of tabs roughly (36px + padding) */
+            padding: 0 12px;
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        .setup-input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+
+        .team-input:focus {
+            border-color: var(--primary-color);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            align-items: center;
+        }
+
+        .icon-btn {
+            width: 36px;
+            /* Reduced from 40px */
+            height: 36px;
+            /* Reduced from 40px */
+            /* Match input height roughly */
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+
+        .live-controls_grid {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            /* Bottom align controls */
+            justify-content: center;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            /* Stretch children to fill width */
+            gap: 5px;
+            flex: 1;
+            /* Grow to fill space */
+            min-width: 200px;
+            /* Minimum width before wrapping */
+        }
+
+        .control-label {
+            font-size: 12px;
+            font-weight: bold;
+            margin: 0 0 5px 0;
+            color: #555;
+            display: block;
+            text-align: center;
+        }
+
+        /* Setup Card Specific overrides for compactness */
+        .setup-container .setup-input,
+        .setup-container .tab,
+        .setup-container .glider {
+            height: 30px !important;
+            /* Force smaller height */
+            min-height: 0;
+        }
+
+        .setup-container .tabs {
+            min-height: 0;
+        }
+
+        /* Highlighting Live Controls Panel */
+        .card.highlight-card {
+            background-color: #fffaf0;
+            /* Keep warm bg only for highlight card */
+            /* Even lighter primary color */
+            border: 1px solid #ffe0b2;
+            padding: 15px;
+            /* Increased padding for emphasis */
+        }
+
+        .card.highlight-card h4 {
+            margin-bottom: 24px;
+            /* Increased from 15px */
+        }
+
+        /* Log Table Styles */
+        .log-container {
+            flex-grow: 1;
+            height: 100%;
+            /* Fill parent height */
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: #fff;
+            margin-bottom: 0;
+            max-height: 400px;
+            /* Limit height to enable scrolling */
+        }
+
+        .log-table {
+            width: 100%;
+            table-layout: fixed;
+            /* Enforce fixed column widths */
+            border-collapse: collapse;
+            font-size: 12px;
+            /* Reduced font size */
+        }
+
+        .log-table th,
+        .log-table td {
+            padding: 6px;
+            /* Reduced padding */
+            text-align: center;
+            border-bottom: 1px solid var(--gray-medium);
+            white-space: nowrap;
+            overflow: hidden;
+            /* Hide overflow */
+            text-overflow: ellipsis;
+            /* Add ellipsis (...) */
+        }
+
+        .log-table th {
+            background-color: var(--gray-light);
+            position: sticky;
+            top: 0;
+            font-weight: bold;
+            color: #555;
+            color: #555;
+            border-bottom: 2px solid var(--gray-medium);
+            z-index: 1;
+        }
+
+        .log-table tr:last-child td {
+            border-bottom: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div style="width: 100%; max-width: 1000px; margin: 0 auto;">
+        <div class="card" style="margin-bottom: 8px;">
+            <div style="display: flex; margin-bottom: 8px;">
+                <img id="logo" src="/static/assets/logo.png" alt="logo" style="width: 200px;">
+            </div>
+            <div id="mode-selector" style="display: flex; gap: 10px;">
+                <button id="btn-live-mode">⚽ 실시간 입력</button>
+                <button id="btn-upload-mode">📄 파일 업로드</button>
+                <button id="btn-manual-mode">📘 사용 설명서</button>
+            </div>
+        </div>
+
+        <!-- 게임 설정 카드 (신규 추가) -->
+
+
+        <!-- 실시간 입력 모드 -->
+        <div id="live-mode-container" class="main-container">
+            <!-- 게임 설정 카드 (신규 추가) -->
+            <div class="card" style="margin-bottom: 8px;">
+                <div class="setup-container" style="display: flex; gap: 10px; width: 100%;">
+                    <!-- 1. Home Team -->
+                    <div style="flex: 1;">
+                        <span class="input-label">Home Team</span>
+                        <input type="text" id="teamid_h" class="setup-input" placeholder="Home">
+                    </div>
+
+                    <!-- 2. Away Team -->
+                    <div style="flex: 1;">
+                        <span class="input-label">Away Team</span>
+                        <input type="text" id="teamid_a" class="setup-input" placeholder="Away">
+                    </div>
+
+                    <!-- 3. Match ID -->
+                    <div style="flex: 1;">
+                        <span class="input-label">Match ID</span>
+                        <input type="text" id="match_id" class="setup-input" placeholder="ID">
+                    </div>
+
+                    <!-- 4. Half Toggle -->
+                    <div style="flex: 1;">
+                        <span class="input-label">Half</span>
+                        <div class="tabs">
+                            <input type="radio" id="half_1st" name="half" value="1st" checked>
+                            <label class="tab" for="half_1st">1st</label>
+                            <input type="radio" id="half_2nd" name="half" value="2nd">
+                            <label class="tab" for="half_2nd">2nd</label>
+                            <span class="glider"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 상단: 로그 + 축구장 (visual-container) -->
+            <div class="visual-container">
+                <div class="card">
+                    <h2>기록된 로그</h2>
+                    <div class="log-container">
+                        <table class="log-table" id="log_table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 12%;">Time</th>
+                                    <th style="width: 12%;">Team</th>
+                                    <th style="width: 12%;">Player</th>
+                                    <th style="width: 34%;">Action</th>
+                                    <th style="width: 30%;">Pos</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Logs will be added here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="button-group">
+                        <button id="export_logs">분석 및 내보내기</button>
+                        <button id="delete_last">마지막 로그 삭제</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <h2>축구장</h2>
+                    <div id="field-wrapper">
+                        <img id="field-image" src="/static/assets/football_field.png" alt="Football Field">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 하단: 통합된 입력 컨트롤 (controls-container 수정) -->
+            <div class="controls-container">
+                <div class="card highlight-card">
+                    <h4>실시간 입력 (Live Controls)</h4>
+                    <div class="live-controls_grid">
+
+                        <!-- 1. Direction Toggle -->
+                        <div class="control-group" style="flex: 0.7; min-width: 150px;">
+                            <p class="control-label">Direction</p>
+                            <div class="tabs">
+                                <input type="radio" id="dir_right" name="direction" value="right" checked>
+                                <label class="tab" for="dir_right">Right</label>
+                                <input type="radio" id="dir_left" name="direction" value="left">
+                                <label class="tab" for="dir_left">Left</label>
+                                <span class="glider"></span>
+                            </div>
+                        </div>
+
+                        <!-- 2. Team Toggle -->
+                        <div class="control-group" style="flex: 0.7; min-width: 150px;">
+                            <p class="control-label">Team</p>
+                            <div class="tabs">
+                                <input type="radio" id="team_home" name="team" value="home" checked>
+                                <label class="tab" for="team_home">Home</label>
+                                <input type="radio" id="team_away" name="team" value="away">
+                                <label class="tab" for="team_away">Away</label>
+                                <span class="glider"></span>
+                            </div>
+                        </div>
+
+                        <!-- 3. Time Control -->
+                        <div class="control-group" style="flex: 1;">
+                            <p class="control-label">Game Time</p>
+                            <div style="display: flex; gap: 5px; align-items: center; width: 100%;">
+                                <button id="time_minus"
+                                    style="width: 40px; height: 36px; flex: none; padding: 0; color: #555; background-color: rgba(255, 116, 0, 0.1);">-1</button>
+                                <input type="text" id="timeline" value="00:00"
+                                    style="flex: 1; height: 36px; text-align: center; font-weight: bold; font-size: 16px;">
+                                <button id="time_plus"
+                                    style="width: 40px; height: 36px; flex: none; padding: 0; color: #555; background-color: rgba(255, 116, 0, 0.1);">+1</button>
+                            </div>
+                        </div>
+
+                        <!-- 4. Stat Input & Button -->
+                        <div class="control-group" style="flex: 2; min-width: 250px;">
+                            <p class="control-label">Stat Input</p>
+                            <div class="input-group">
+                                <input type="text" id="stat_input" class="setup-input" placeholder="스탯 코드 (예: 10ss8.k)">
+                                <!-- Restored Placeholder -->
+                                <button id="submit_stat" class="icon-btn" style="width: 72px;">↵</button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+       <div id="upload-mode-container" class="card" style="display: none; padding: 25px; margin-top: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+        
+        <div style="margin-bottom: 30px;">
+            <h4 style="font-weight: bold; color: #495057;">📂 파일 업로드하여 분석 (Excel Download)</h4>
+            <p style="color: #6c757d; font-size: 0.9rem; margin-bottom: 15px;">
+                'Data' 시트가 포함된 .xlsx 파일을 업로드하면, 전체 데이터가 분석된 엑셀 파일을 다운로드합니다.
+            </p>
+            <form id="upload-form" style="display: flex; gap: 10px; align-items: center; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6;">
+                <input type="file" name="file" id="file-input" accept=".xlsx" required style="flex: 1;">
+                <button type="submit" class="btn btn-secondary" style="white-space: nowrap;">파일 분석 및 다운로드</button>
+            </form>
+        </div>
+
+        <hr style="border-top: 2px dashed #ced4da; margin: 30px 0;">
+
+        <div>
+            <h4 style="font-weight: bold; color: #007bff;">📊 시각화 리포트 (Pass Map & Heatmap)</h4>
+            <p style="color: #6c757d; font-size: 0.9rem; margin-bottom: 20px;">
+                특정 선수를 선택하여 패스맵과 히트맵을 웹에서 바로 확인합니다. (다운로드 없음)
+            </p>
+
+            <div style="background: #e7f1ff; padding: 20px; border-radius: 8px; border: 1px solid #b8daff;">
+                <div class="row align-items-end">
+                    <div class="col-md-5">
+                        <label style="font-weight: bold;">Step 1. 파일 선택</label>
+                        <input type="file" id="viz-file" accept=".xlsx" class="form-control" onchange="loadPlayerList()">
+                    </div>
+                    <div class="col-md-3" id="player-select-area" style="display: none;">
+                        <label style="font-weight: bold;">Step 2. 선수 선택</label>
+                        <select id="viz-player-select" class="form-control">
+                            <option value="">로딩 중...</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <button id="btn-run-analysis" onclick="runAnalysis()" class="btn btn-primary btn-block" disabled>
+                            먼저 선수를 선택하세요
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="viz-result" style="display: none; margin-top: 25px; padding: 20px; background: #fff; border: 1px solid #dee2e6; border-radius: 8px; text-align: center;">
+                <h5 style="font-weight: bold; margin-bottom: 20px;">📈 분석 결과</h5>
+                <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 30px;">
+                    <div style="text-align: center;">
+                        <span class="badge badge-success" style="padding: 8px 12px; margin-bottom: 10px; display: inline-block;">Pass Map</span><br>
+                        <img id="img-pass" style="max-width: 100%; height: auto; border: 1px solid #eee; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                    </div>
+                    <div style="text-align: center;">
+                        <span class="badge badge-danger" style="padding: 8px 12px; margin-bottom: 10px; display: inline-block;">Heatmap</span><br>
+                        <img id="img-heat" style="max-width: 100%; height: auto; border: 1px solid #eee; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="manual-mode-container" class="card" style="display: none; max-height: 80vh; overflow-y: auto;">
+        <h2>📘 FPA WebApp 사용 설명서</h2>
+        <iframe src="/static/MANUAL.html" style="width: 100%; height: 70vh; border: none;"></iframe>
+    </div>
+
+</div> <script>
+    const FIELD_WIDTH_M = 105;
+    const FIELD_HEIGHT_M = 68;
+    let dots = [];
+    let logs = [];
+
+    const fieldWrapper = document.getElementById('field-wrapper');
+    const fieldImage = document.getElementById('field-image');
+    const logTableBody = document.querySelector('#log_table tbody');
+
+    // --- 1. 모드 전환 로직 ---
+    const liveModeContainer = document.getElementById('live-mode-container');
+    const uploadModeContainer = document.getElementById('upload-mode-container');
+    const manualModeContainer = document.getElementById('manual-mode-container');
+    const btnLiveMode = document.getElementById('btn-live-mode');
+    const btnUploadMode = document.getElementById('btn-upload-mode');
+    const btnManualMode = document.getElementById('btn-manual-mode');
+
+    function setMode(mode) {
+        liveModeContainer.style.display = 'none';
+        uploadModeContainer.style.display = 'none';
+        manualModeContainer.style.display = 'none';
+
+        btnLiveMode.classList.remove('active');
+        btnUploadMode.classList.remove('active');
+        btnManualMode.classList.remove('active');
+
+        if (mode === 'live') {
+            liveModeContainer.style.display = 'flex';
+            btnLiveMode.classList.add('active');
+        } else if (mode === 'upload') {
+            uploadModeContainer.style.display = 'block';
+            btnUploadMode.classList.add('active');
+        } else if (mode === 'manual') {
+            manualModeContainer.style.display = 'block';
+            btnManualMode.classList.add('active');
+        }
+    }
+
+    btnLiveMode.addEventListener('click', () => setMode('live'));
+    btnUploadMode.addEventListener('click', () => setMode('upload'));
+    btnManualMode.addEventListener('click', () => setMode('manual'));
+
+    // 팀 변경 시 방향 자동 전환
+    const teamRadios = document.querySelectorAll('input[name="team"]');
+    teamRadios.forEach(radio => {
+        radio.addEventListener('change', () => {
+            const currentDir = document.querySelector('input[name="direction"]:checked').value;
+            const newDir = currentDir === 'right' ? 'left' : 'right';
+            const dirRadio = document.querySelector(`input[name="direction"][value="${newDir}"]`);
+            if (dirRadio) dirRadio.checked = true;
+        });
+    });
+
+    setMode('live'); // 초기 모드
+
+    // --- 2. 시간 조정 기능 ---
+    const timelineInput = document.getElementById('timeline');
+
+    function parseTime(timeStr) {
+        const parts = timeStr.split(':');
+        if (parts.length === 2) return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+        return 0;
+    }
+
+    function formatTime(totalSeconds) {
+        if (totalSeconds < 0) totalSeconds = 0;
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+
+    function incrementTime(minutes) {
+        const currentSeconds = parseTime(timelineInput.value);
+        const newSeconds = currentSeconds + (minutes * 60);
+        timelineInput.value = formatTime(newSeconds);
+    }
+
+    document.getElementById('time_plus').addEventListener('click', () => incrementTime(1));
+    document.getElementById('time_minus').addEventListener('click', () => incrementTime(-1));
+
+    document.addEventListener('keydown', (event) => {
+        if (event.target.tagName === 'INPUT' && event.target.id !== 'timeline') return;
+        if (event.key === 'ArrowUp' || event.key === 'ArrowRight') {
+            event.preventDefault(); incrementTime(1);
+        } else if (event.key === 'ArrowDown' || event.key === 'ArrowLeft') {
+            event.preventDefault(); incrementTime(-1);
+        }
+    });
+
+    // --- 3. 실시간 입력 로직 (점 찍기 및 우클릭 삭제) ---
+    fieldWrapper.addEventListener('click', (event) => {
+        const rect = fieldImage.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        const meter_x = (x / rect.width * FIELD_WIDTH_M).toFixed(2);
+        const meter_y = ((rect.height - y) / rect.height * FIELD_HEIGHT_M).toFixed(2);
+
+        dots.push({ x, y, meter_x, meter_y });
+        drawDot(x, y);
+    });
+
+    fieldWrapper.addEventListener('contextmenu', (event) => {
+        event.preventDefault();
+        if (dots.length > 0) {
+            dots.pop();
+            const dotElements = document.querySelectorAll('.dot');
+            if (dotElements.length > 0) dotElements[dotElements.length - 1].remove();
+        }
+    });
+
+    function drawDot(x, y) {
+        const dot = document.createElement('div');
+        dot.className = 'dot';
+        dot.style.left = `${x}px`;
+        dot.style.top = `${y}px`;
+        fieldWrapper.appendChild(dot);
+    }
+
+    function clearDots() {
+        dots = [];
+        document.querySelectorAll('.dot').forEach(d => d.remove());
+    }
+
+    // 스탯 제출
+    document.getElementById('submit_stat').addEventListener('click', async () => {
+        const statInput = document.getElementById('stat_input').value;
+        if (!statInput || dots.length === 0) {
+            alert('스탯 코드와 좌표를 모두 입력해주세요.');
+            return;
+        }
+
+        const payload = {
+            stat_input: statInput,
+            dots: dots,
+            half: document.querySelector('input[name="half"]:checked').value,
+            team: document.querySelector('input[name="team"]:checked').value,
+            direction: document.querySelector('input[name="direction"]:checked').value,
+            timeline: document.getElementById('timeline').value,
+        };
+
+        const response = await fetch('/generate_log', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            logs.push(data.log_text);
+            const row = document.createElement('tr');
+            const logData = data.log_data;
+            row.innerHTML = `<td>${logData.Time}</td><td>${logData.Team}</td><td>${logData.Player}</td><td>${logData.Action}</td><td>${logData.Coord}</td>`;
+            logTableBody.appendChild(row);
+
+            const logContainer = document.querySelector('.log-container');
+            logContainer.scrollTop = logContainer.scrollHeight;
+
+            clearDots();
+            document.getElementById('stat_input').value = '';
+        } else {
+            alert(`오류 발생: ${data.error}`);
+        }
+    });
+
+    // 마지막 로그 삭제
+    document.getElementById('delete_last').addEventListener('click', () => {
+        if (logs.length > 0) {
+            logs.pop();
+            if (logTableBody.lastElementChild) logTableBody.removeChild(logTableBody.lastElementChild);
+        }
+    });
+
+    // 엑셀 내보내기 (Export Logs)
+    document.getElementById('export_logs').addEventListener('click', async () => {
+        if (logs.length === 0) {
+            alert('분석할 로그가 없습니다.');
+            return;
+        }
+        const payload = {
+            logs: logs,
+            match_id: document.getElementById('match_id').value,
+            teamid_h: document.getElementById('teamid_h').value,
+            teamid_a: document.getElementById('teamid_a').value,
+        };
+        const response = await fetch('/export', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = 'live_analyzed_data.xlsx';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            a.remove();
+        } else {
+            const error = await response.json();
+            alert(`오류 발생: ${error.error}`);
+        }
+    });
+
+    // --- 4. [기존 기능] 파일 업로드 및 다운로드 (Excel Download) ---
+    document.getElementById('upload-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const fileInput = document.getElementById('file-input');
+        if (fileInput.files.length === 0) {
+            alert('분석할 파일을 선택해주세요.');
+            return;
+        }
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+
+        const btn = document.querySelector('#upload-form button');
+        const originalText = btn.innerText;
+        btn.innerText = "처리 중...";
+        btn.disabled = true;
+
+        const response = await fetch('/upload_analyze', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = 'uploaded_analyzed_data.xlsx';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            a.remove();
+        } else {
+            const error = await response.json();
+            alert(`오류 발생: ${error.error}`);
+        }
+        btn.innerText = originalText;
+        btn.disabled = false;
+    });
+
+    // --- 5. [신규 기능] 시각화 리포트 로직 (Pass Map & Heatmap) ---
+    async function loadPlayerList() {
+        const fileInput = document.getElementById('viz-file');
+        const selectArea = document.getElementById('player-select-area');
+        const selectBox = document.getElementById('viz-player-select');
+        const runBtn = document.getElementById('btn-run-analysis');
+
+        if (fileInput.files.length === 0) return;
+
+        selectArea.style.display = 'block';
+        selectBox.innerHTML = '<option value="">로딩 중...</option>';
+
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+
+        try {
+            const res = await fetch('/get_player_list', { method: 'POST', body: formData });
+            const data = await res.json();
+            
+            if (data.error) { alert(data.error); return; }
+
+            let opts = '<option value="">선수를 선택하세요</option>';
+            data.players.forEach(p => opts += `<option value="${p}">${p}번 선수</option>`);
+            selectBox.innerHTML = opts;
+
+            selectBox.onchange = () => {
+                if (selectBox.value) {
+                    runBtn.disabled = false;
+                    runBtn.innerText = "분석 실행 (Click)";
+                } else {
+                    runBtn.disabled = true;
+                    runBtn.innerText = "선수를 선택하세요";
+                }
+            };
+        } catch (e) { console.error(e); alert("통신 오류 발생"); }
+    }
+
+    async function runAnalysis() {
+        const fileInput = document.getElementById('viz-file');
+        const selectBox = document.getElementById('viz-player-select');
+        const btn = document.getElementById('btn-run-analysis');
+
+        btn.innerText = "분석 중...";
+        btn.disabled = true;
+
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+        formData.append('player_id', selectBox.value);
+
+        try {
+            const res = await fetch('/upload_analyze_visualize', { method: 'POST', body: formData });
+            const data = await res.json();
+
+            if (data.error) {
+                alert(data.error);
+            } else {
+                document.getElementById('img-pass').src = "data:image/png;base64," + data.pass_map;
+                document.getElementById('img-heat').src = "data:image/png;base64," + data.heatmap;
+                
+                const resultDiv = document.getElementById('viz-result');
+                resultDiv.style.display = 'block';
+                resultDiv.scrollIntoView({ behavior: 'smooth' });
+            }
+        } catch (e) {
+            console.error(e);
+            alert("분석 중 오류가 발생했습니다.");
+        } finally {
+            btn.innerText = "분석 실행 (Click)";
+            btn.disabled = false;
+        }
+    }
+</script>
+
+</body>
+</html>
